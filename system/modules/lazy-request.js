@@ -1,0 +1,75 @@
+module.exports = class LazyRequest {
+
+	#request 		=  null;
+	#isMultipart 	= null;
+
+    constructor(request){
+
+		this.#request        = null;
+        this.#isMultipart    = contains(header('content-type'), 'multipart/form-data');
+
+        var body    = {},
+            files   = {};
+
+        if(this.#isMultipart){
+            for(var file of request.files){
+                var lazyRequestFile = require(bpath('system/modules/lazy-request-file'));
+                files[file.fieldname] = new lazyRequestFile(file.originalname !== '' && file.size > 0 ? file : '');
+            }
+        }
+
+        this.#request = Object.assign(request.body, request.query, files);        
+    }
+
+    // file        = (paramKey) => {
+    //     var val = undefined;
+
+    //     if(this.#isMultipart){
+    //     	each(this.#request, (key, value) => {
+    //             if(paramKey === key && value.constructor.name === 'LazyRequestFile') val = value;
+    //         });
+    //     }
+
+    //     return val;
+    // }
+
+    all         = () => {
+        var data = {};
+
+        foreach(this.#request, (key, value) => {
+            data[key] = value;
+        });
+
+        return data;
+    }
+
+    get         = (paramKey) => {
+        var val = undefined;
+
+        foreach(this.#request, (key, value) => {
+            if(paramKey === key) val = value;
+        });
+
+        return val;
+    }
+
+    has         = (paramKey) => {
+        var found = false;
+        foreach(this.#request, (key, value) => {
+            if(paramKey === key && value.constructor.name !== 'LazyRequestFile') found = true;
+        });
+
+        return found;
+    }
+
+    hasFile     = (paramKey) => {
+        if(this.#isMultipart){
+            var found = false;
+            foreach(this.#request, (key, value) => {
+                if(paramKey === key && value.constructor.name === 'LazyRequestFile') found = true;
+            });
+        }
+
+        return found;
+    }
+};

@@ -1,0 +1,30 @@
+{
+  "name": "lazify",
+  "version": "0.1.0",
+  "description": "A Lazy Microservice Framework by A-SM",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "A-SM",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dateformat": "^3.0.3",
+    "deasync": "^0.1.20",
+    "detect-file-type": "^0.2.8",
+    "express": "^4.17.1",
+    "express-jwt": "^6.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "knex": "^0.21.1",
+    "md5": "^2.2.1",
+    "moment-timezone": "^0.5.31",
+    "multer": "^1.4.2",
+    "mysql": "^2.18.1",
+    "pg": "^8.2.1",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.5",
+    "sha1": "^1.1.1",
+    "uuid": "^8.2.0"
+  }
+}
