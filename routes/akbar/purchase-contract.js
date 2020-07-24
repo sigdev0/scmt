@@ -97,7 +97,7 @@ POST('purchase-contract/insert' 	, () => {
 				};
 
                 PCD.insert(pcdData);
-            };
+            }
 
             res(purchase_contract);
         } else {
@@ -142,7 +142,7 @@ PUT('purchase-contract/update' 		, () => {
 					// updated_by              : req('updated_by');
 				}
                 PCD.update(pcdData, {id : req('details')[i]['id']})
-            };
+            }
 
             res(pc);
         } else {

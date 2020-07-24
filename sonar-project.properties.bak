@@ -1,0 +1,7 @@
+sonar.projectKey=scmt-2020
+sonar.projectName=SCMT 2020
+sonar.projectVersion=1.0sonar.language=jssonar.sources=src
+sonar.sourceEncoding=UTF-8sonar.exclusions=.vscode,node_modules,src/**/*.spec.js
+sonar.test.inclusions=src/**/*.spec.js
+sonar.coverage.exclusions=.vscode,node_modules,src/**/*.spec.js,src/**/*.mock.js,node_modules/*,coverage/lcov-report/*sonar.javascript.lcov.reportPaths=coverage/lcov.info
+sonar.testExecutionReportPaths=test-report.xml

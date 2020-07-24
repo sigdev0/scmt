@@ -82,7 +82,7 @@ POST('purchase-requisition/insert' 		, () => {
 
         if(purchase_requisition){
 			console.log(req('details'));
-            for(i = 0 ; i < count(req('details')); i++){
+            for(var i = 0 ; i < count(req('details')); i++){
                 var detail 							= PRD.instance();
 					detail.quantity 				= req('details')[i]['quantity'];
 					detail.target_date 				= req('details')[i]['target_date'];
@@ -120,7 +120,7 @@ PUT('purchase-requisition/update' 		, () => {
 		var purchase_requisition = PR.update(data, condition);
 			
         if(purchase_requisition){
-            for(i = 0 ; i < count(req('details')); i++){
+            for(var i = 0 ; i < count(req('details')); i++){
 				var detailCondition = {id : req('details')[i]['id']},
 					detailData 		= {
 						quantity                : req('details')[i]['quantity'],
@@ -138,7 +138,7 @@ PUT('purchase-requisition/update' 		, () => {
         } else {
 			res('Internal server error occured', 500);
         }
-    });;    
+    });
 });
 
 /* PR Delete */
