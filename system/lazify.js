@@ -31,11 +31,16 @@ module.exports = new class Lazify {
 	};
 
 	#autoRegisterModel = () => {
+		var primaries = {};
 		File.list('app', (file, staticPath, dynamicPath) => {
-			var model = replace(file, '.js', '');
+			var modelName = replace(file, '.js', '');
 			if(File.isFile(staticPath) && endsWith(file, 'js')){
-				global[model] = require(staticPath);
+				var model = require(staticPath);
+				primaries[model._attr().table] = model._attr().primaryColumn;
+				global[modelName] = model;
 			} 
 		});
+
+		global.primaries = primaries;
 	}
 };

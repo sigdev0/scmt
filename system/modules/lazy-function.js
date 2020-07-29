@@ -116,11 +116,7 @@ module.exports = new class LazyFunction {
 	isString        = (param) => {
 		return typeof param === 'string';
 	}
-
-	isUndefined     = (param) => {
-		return typeof param === 'undefined';
-	}
-
+	
 	keys 		= (param) => {
 		return Object.keys(param);
 	}

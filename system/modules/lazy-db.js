@@ -118,7 +118,7 @@ class LazyDB {
 		var message     = null,
 			condition   = count(callback) > 0 ? callback[0] : {},
 			onSuccess   = count(callback) > 1 ? callback[1] : (result)  => {},
-			onError     = count(callback) > 2 ? callback[2] : (message) => { console.error(message); };
+			onError     = count(callback) > 2 ? callback[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message); };
 
 		// if (this.#processable) {
 			condition 		= Object.assign(this.props(), condition);
@@ -158,7 +158,7 @@ class LazyDB {
 		var message     = null,
 			data        = count(callback) > 0 ? callback[0] : {},
 			onSuccess   = count(callback) > 1 ? callback[1] : (result) 	=> {},
-			onError     = count(callback) > 2 ? callback[2] : (message) => { console.error(message) };
+			onError     = count(callback) > 2 ? callback[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message) };
 
 		// if (this.#processable) {
 		data = Object.assign(this.props(), data);
@@ -237,7 +237,7 @@ class LazyDB {
 	truncate            = (...callback) => {
 		var message     = null,
 			onSuccess   = count(callback) > 0 ? callback[0] : (result) 	=> {},
-			onError     = count(callback) > 1 ? callback[1] : (message) => { console.error(message) };
+			onError     = count(callback) > 1 ? callback[1] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message) };
 
 		// if (this.#processable) {
 		this.#knex.truncate().then((result) => {
@@ -273,7 +273,7 @@ class LazyDB {
 			data 		= count(param) > 0 ? param[0] : {},
 			condition 	= count(param) > 1 ? param[1] : {},
 			onSuccess   = count(param) > 2 ? param[2] : (result)  => { },
-			onError   	= count(param) > 3 ? param[3] : (message) => { console.error(message) },
+			onError   	= count(param) > 3 ? param[3] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message) },
 			primary 	= hasKey(this._attr(), 'primaryColumn') ? this._attr().primaryColumn : false;
 
 		if(primary && empty(condition) && hasKey(this.props(), primary)){
@@ -337,7 +337,7 @@ class LazyDB {
 		var message     = null,
 			column 		= param[0],
 			onSuccess   = count(param) > 1 ? param[1] : (result) => {},
-			onError     = count(param) > 2 ? param[2] : (message) => { console.error(message); };
+			onError     = count(param) > 2 ? param[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message); };
 
 		// if (this.#processable) {
 			
@@ -370,7 +370,7 @@ class LazyDB {
 	count               = (...callback) => {
 		var message     = null,
 			onSuccess   = count(callback) > 1 ? callback[1] : (result) => {},
-			onError     = count(callback) > 2 ? callback[2] : (message) => { console.error(message); };
+			onError     = count(callback) > 2 ? callback[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message); };
 
 		// if (this.#processable) {
 
@@ -403,12 +403,12 @@ class LazyDB {
 	exists              = (...callback) => {
 		var message     = null,
 			onSuccess   = count(callback) > 1 ? callback[1] : (result) => {},
-			onError     = count(callback) > 2 ? callback[2] : (message) => { console.error(message); };
+			onError     = count(callback) > 2 ? callback[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message); };
 
 		// if (this.#processable) {
 
 		this.#knex.first().then((result) => {
-			message = !isUndefined(result);
+			message = !typeof result === 'undefined';
 			onSuccess(message);
 		}).catch((error) => {
 			message = false;
@@ -452,14 +452,14 @@ class LazyDB {
 	first               = (...callback) => {
 		var message 	= null,
 			onSuccess   = count(callback) === 1 ? callback[0] : (result) => {},
-			onError     = count(callback) === 2 ? callback[1] : (message) => { console.error(message) };
+			onError     = count(callback) === 2 ? callback[1] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message) };
 
 		// if (this.#processable) {
 		this.#knex.first().then((result) => {
-			message = isUndefined(result) ? false : result;
+			message = typeof result === 'undefined' ? false : result;
 		}).catch((error) => {
 			message = false;
-			onError(`${String(error).toLowerCase().replace('error: ', 'ERROR [$db.first]: ')}`);
+			onError(`${String(error).toLowerCase().replace('error: ', 'ERROR [db.first]: ')}`);
 		});
 
 		sync(() => message === null); this._init();
@@ -494,8 +494,8 @@ class LazyDB {
 
 	get                 = (...callback) => {
 		var message     = null,
-			onSuccess   = count(callback) == 1  ? callback[0] : (result) => {},
-			onError     = count(callback) == 2  ? callback[1] : (result) => { console.error(message) };
+			onSuccess   = count(callback) == 1  ? callback[0] : (result)  => {},
+			onError     = count(callback) == 2  ? callback[1] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message) };
 
 		// if (this.#processable) {
 
@@ -544,7 +544,7 @@ class LazyDB {
 		var message     = null,
 			column 		= param[0],
 			onSuccess   = count(param) > 1 ? param[1] : (result) => {},
-			onError     = count(param) > 2 ? param[2] : (message) => { console.error(message); };
+			onError     = count(param) > 2 ? param[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message); };
 
 		// if (this.#processable) {
 
@@ -578,7 +578,7 @@ class LazyDB {
 		var message     = null,
 			column 		= param[0],
 			onSuccess   = count(param) > 1 ? param[1] : (result) => {},
-			onError     = count(param) > 2 ? param[2] : (message) => { console.error(message); };
+			onError     = count(param) > 2 ? param[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message); };
 
 		// if (this.#processable) {
 		this.#knex.min(column).then((result) => {
@@ -611,7 +611,7 @@ class LazyDB {
 		var message     = null,
 			column 		= param[0],
 			onSuccess   = count(param) > 1 ? param[1] : (result) => {},
-			onError     = count(param) > 2 ? param[2] : (message) => { console.error(message); };
+			onError     = count(param) > 2 ? param[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message); };
 
 		// if (this.#processable) {
 		this.#knex.sum(column).then((result) => {
@@ -884,7 +884,7 @@ module.exports.query 	= (...param) => {
 		var message 	= null,
 			query 		= param[0],
 			onSuccess 	= count(param) > 1 ? param[1] : (result) => {},
-			onError 	= count(param) > 2 ? param[2] : (message) => { console.error(message) };
+			onError 	= count(param) > 2 ? param[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message) };
 
 			knex.raw(query).then((result) => {
 				// console.log(result);
@@ -930,7 +930,10 @@ module.exports.query 	= (...param) => {
 };
 
 module.exports.db 		= (table) => {
-	var instance = new LazyDB({table : table});
+	var instance = new LazyDB({
+		table 			: table,
+		primaryColumn 	: primaries[table]
+	});
 	return instance._init();
 };
 
