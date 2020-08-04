@@ -73,7 +73,7 @@ GET('good-deliveries', () => {
 					.leftJoin('products', 'products.id', 'product_id')
 					.where({good_delivery_id : eachGD.id});
 
-            eachGD.details = details.get();
+            eachGD.details = details.get() || {};
             goodDeliveries.push(eachGD);
     });
 

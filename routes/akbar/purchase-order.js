@@ -59,7 +59,7 @@ GET('purchase-orders'    		, () => {
 
     if(!empty(limit))  	result.limit(limit);
     if(!empty(offset))  result.offset(offset);
-    if(!empty(keyword)) result.whereLike('number', keyword).orWhereLike('remarks', keyword);
+    if(!empty(keyword)) result.whereLike('purchase_orders.number', keyword).orWhereLike('purchase_orders.reference', keyword);
 
     var purchase_orders = [];
     foreach(result.get(), (indexPO, eachPO) => {
@@ -74,7 +74,7 @@ GET('purchase-orders'    		, () => {
 					.leftJoin('purchase_orders', 'purchase_orders.id', 'purchase_order_id')
 					.where({purchase_order_id : eachPO.id});
 
-            eachPO.details = details.get();
+            eachPO.details = details.get() || {};
             purchase_orders.push(eachPO);
     });
 

@@ -47,7 +47,7 @@ GET('purchase-requisitions' 			, () => {
 
     if(!empty(limit))  		pr.limit(limit);
     if(!empty(offset))  	pr.offset(offset);
-	if(!empty(keyword)) 	pr.whereLike('number', keyword).orWhereLike('remarks', keyword);
+	if(!empty(keyword)) 	pr.whereLike('purchase_requisitions.number', keyword).orWhereLike('purchase_requisitions.remarks', keyword);
 
 	var purchase_equisitions = [];
     foreach(pr.get(), (indexPR, eachPR) => {
@@ -58,7 +58,7 @@ GET('purchase-requisitions' 			, () => {
 				.leftJoin('locations', 'locations.id', 'location_id')
 				.where({purchase_requisition_id : eachPR.id});
 
-		eachPR.details = details.get();
+		eachPR.details = details.get() || {};
 		
 		purchase_equisitions.push(eachPR);
     });

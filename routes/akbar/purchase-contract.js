@@ -39,12 +39,19 @@ GET('purchase-contracts' 			, () => {
 						'creators.username as created_by', 'updaters.username as updated_by', 'supplier_description')
 				.leftJoin('users as creators', 'creators.id', 'purchase_contracts.created_by')
 				.leftJoin('users as updaters', 'updaters.id', 'purchase_contracts.updated_by')
-				.leftJoin('suppliers', 'suppliers.id', 'supplier_id')
-				.get();
+				.leftJoin('suppliers', 'suppliers.id', 'supplier_id');
 
-    if(result){
+	var limit   = req('limit'),
+		offset  = req('offset'),
+		keyword = req('keyword');
+
+	if(!empty(limit))  	result.limit(limit);
+	if(!empty(offset))  result.offset(offset);
+	if(!empty(keyword)) result.whereLike('purchase_contracts.number', keyword).orWhereLike('purchase_contracts.reference', keyword);
+
+    // if(result.get()){
 		var purchaseContracts = [];
-        foreach(result, (indexPC, eachPC) => {
+        foreach(result.get(), (indexPC, eachPC) => {
             var details = PCD 	.select('quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_code', 'brand')
 								.leftJoin('products', 'products.id', 'product_id')
 								.where('purchase_contract_id', eachPC.id)
@@ -56,9 +63,9 @@ GET('purchase-contracts' 			, () => {
         });
         
         res(purchaseContracts);
-    } else {
-		res("Internal server error occured", 500);
-    }
+    // } else {
+	// 	res("Internal server error occured", 500);
+    // }
 
 });
 
