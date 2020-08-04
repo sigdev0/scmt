@@ -183,8 +183,8 @@ PUT('purchase-order/update' 	, function(){
                 // }).success( () => {
                 // });
 
-                res(purchaseOrder);
             }
+			res(purchaseOrder);
             
         }
     });    
