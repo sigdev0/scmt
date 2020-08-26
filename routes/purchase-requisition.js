@@ -75,6 +75,7 @@ POST('purchase-requisition/insert' 		, () => {
 		};
 
     validate(data, rule, () => {
+		data.id 		= PR.max('id') + 1;
 		data.created_at = now(true);
 		data.updated_at = now(true);
 		
@@ -83,7 +84,8 @@ POST('purchase-requisition/insert' 		, () => {
         if(purchase_requisition){
 			console.log(req('details'));
             for(var i = 0 ; i < count(req('details')); i++){
-                var detail 							= PRD.instance();
+				var detail 							= PRD.instance();
+					detail.id 						= PRD.max('id') + 1;
 					detail.quantity 				= req('details')[i]['quantity'];
 					detail.target_date 				= req('details')[i]['target_date'];
 					detail.created_at 				= now(true);

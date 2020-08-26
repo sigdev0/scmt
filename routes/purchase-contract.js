@@ -19,7 +19,7 @@ GET('purchase-contract/:id' 		, () => {
 									.first();
 
 		if(purchaseContract){
-			var pcDetail = PCD 	.select('quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_code', 'brand')
+			var pcDetail = PCD 	.select('purchase_contract_details.id', 'quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_code', 'brand')
 								.leftJoin('products', 'products.id', 'product_id')
 								.where('purchase_contract_id', purchaseContract.id)
 								.get();
@@ -86,6 +86,7 @@ POST('purchase-contract/insert' 	, () => {
 
 	// console.log(data);
     validate(data, rule, () => {
+		data.id 		= PC.max('id') + 1;
         data.created_at = now(true);
 		data.updated_at = now(true);
 
@@ -94,6 +95,7 @@ POST('purchase-contract/insert' 	, () => {
         if(purchase_contract){
 			for(var i = 0; i < count(req('details')); i++) {
                 var pcdData = {
+					id 						: PCD.max('id') + 1,
 					quantity                : req('details')[i]['quantity'],
 					price                   : req('details')[i]['price'],
 					guarantee_period        : req('details')[i]['guarantee_period'],

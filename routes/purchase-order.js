@@ -98,6 +98,7 @@ POST('purchase-order/insert' 	, function(){
 		};
 
     validate(data, rule, () => {
+		data.id 		= PO.max('id') + 1;
 		data.created_at = now();
 		data.updated_at = now();
 
@@ -107,7 +108,8 @@ POST('purchase-order/insert' 	, function(){
             res('Internal server error occured', 500);
         } else {
             for(var i = 0 ; i < count(req('details')); i++){
-                var poDetails                     		= POD.instance();
+				var poDetails                     		= POD.instance();
+					poDetails.id 						= POD.max('id') + 1;
 					poDetails.quantity 					= req('details')[i]['quantity'];
 					poDetails.quantity_outstanding 		= req('details')[i]['quantity_outstanding'];
 					poDetails.created_at 				= now();

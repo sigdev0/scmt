@@ -26,17 +26,17 @@ module.exports = {
 		logging 	: false,
 
 		/* Public SCMT */
-		// host 		: '180.250.19.79',
-		// database 	: 'scmt',
-		// schema		: 'public',	//postgres only
-		// username 	: 'postgres',
-		// password 	: 'sigma123',
-
-		/* Local SCMT */
-		host 		: '127.0.0.1',
+		host 		: '180.250.19.79',
 		database 	: 'scmt',
 		schema		: 'dev',	//postgres only
 		username 	: 'postgres',
-		password 	: 'postgres',
+		password 	: 'sigma123',
+
+		/* Local SCMT */
+		// host 		: '127.0.0.1',
+		// database 	: 'scmt',
+		// schema		: 'dev',	//postgres only
+		// username 	: 'postgres',
+		// password 	: 'postgres',
 	}
 };
