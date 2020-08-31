@@ -49,19 +49,26 @@ GET('purchase-contracts' 			, () => {
 	if(!empty(offset))  result.offset(offset);
 	if(!empty(keyword)) result.whereLike('purchase_contracts.number', keyword).orWhereLike('purchase_contracts.reference', keyword);
 
-    // if(result.get()){
-		var purchaseContracts = [];
-        foreach(result.get(), (indexPC, eachPC) => {
-            var details = PCD 	.select('quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_code', 'brand')
-								.leftJoin('products', 'products.id', 'product_id')
-								.where('purchase_contract_id', eachPC.id)
-								.get();
+	console.log('Before Looping');
 
-			eachPC.details = details || {};
-			
-			purchaseContracts.push(eachPC);
-        });
-        
+    // if(result.get()){
+	var purchaseContracts = [];
+	foreach(result.get(), (indexPC, eachPC) => {
+		var details = PCD 	.select('quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_code', 'brand')
+							.leftJoin('products', 'products.id', 'product_id')
+							.where('purchase_contract_id', eachPC.id)
+							.get();
+
+		eachPC.details = details || {};
+		
+		purchaseContracts.push(eachPC);
+	});
+	
+	console.log('After Looping');
+	console.log(purchaseContracts);
+		
+		
+
         res(purchaseContracts);
     // } else {
 	// 	res("Internal server error occured", 500);
