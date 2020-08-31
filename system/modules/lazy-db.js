@@ -9,7 +9,29 @@ if (config('db.active') && global.knex == null) {
 			password 	: config('db.password'),
 			database 	: config('db.database'),
 			schema		: config('db.schema')
-		}
+		},
+		log: {
+			warn(message) {
+				console.log(`knex warning start`);
+				console.log(message);
+				console.log(`knex warning end`);
+			},
+			error(message) {
+				console.log(`knex error start`);
+				console.log(message);
+				console.log(`knex error end`);
+			},
+			deprecate(message) {
+				console.log(`knex deprecate start`);
+				console.log(message);
+				console.log(`knex deprecate end`);
+			},
+			debug(message) {
+				console.log(`knex debug start`);
+				console.log(message);
+				console.log(`knex debug end`);
+			},
+		  }
 	});
 
 	if (config('db.logging') && !knexLog) {
