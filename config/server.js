@@ -15,7 +15,7 @@ module.exports = {
 			cert 	: 'd:/openssl/certificate.crt',
 			key 	: 'd:/openssl/key.key'
 		},
-		port 		: 3000
+		port 		: 8080
 	},
 
 	/* Database */
