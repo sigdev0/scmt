@@ -10,28 +10,6 @@ if (config('db.active') && global.knex == null) {
 			database 	: config('db.database'),
 			schema		: config('db.schema')
 		},
-		log: {
-			warn(message) {
-				console.log(`knex warning start`);
-				console.log(message);
-				console.log(`knex warning end`);
-			},
-			error(message) {
-				console.log(`knex error start`);
-				console.log(message);
-				console.log(`knex error end`);
-			},
-			deprecate(message) {
-				console.log(`knex deprecate start`);
-				console.log(message);
-				console.log(`knex deprecate end`);
-			},
-			debug(message) {
-				console.log(`knex debug start`);
-				console.log(message);
-				console.log(`knex debug end`);
-			},
-		  }
 	});
 
 	if (config('db.logging') && !knexLog) {
@@ -908,13 +886,13 @@ module.exports.query 	= (...param) => {
 			onSuccess 	= count(param) > 1 ? param[1] : (result) => {},
 			onError 	= count(param) > 2 ? param[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message) };
 
-			knex.raw(query).then((result) => {
-				// console.log(result);
-				if(config('db.client') === 'postgres'){
-					message = result.rows;
-				} else if(config('db.client') === 'mysql'){
-					message = result[0];
-				}
+		knex.raw(query).then((result) => {
+			// console.log(result);
+			if(config('db.client') === 'postgres'){
+				message = result.rows;
+			} else if(config('db.client') === 'mysql'){
+				message = result[0];
+			}
 		}).catch((error) => {
 			message = false;
 			onError(`${String(error).toLowerCase().replace('error: ', 'ERROR [db.query]: ')}`);

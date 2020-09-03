@@ -49,8 +49,6 @@ GET('purchase-contracts' 			, () => {
 	if(!empty(offset))  result.offset(offset);
 	if(!empty(keyword)) result.whereLike('purchase_contracts.number', keyword).orWhereLike('purchase_contracts.reference', keyword);
 
-	console.log('Before Looping');
-
     // if(result.get()){
 	var purchaseContracts = [];
 	foreach(result.get(), (indexPC, eachPC) => {
@@ -63,13 +61,8 @@ GET('purchase-contracts' 			, () => {
 		
 		purchaseContracts.push(eachPC);
 	});
-	
-	console.log('After Looping');
-	console.log(purchaseContracts);
-		
-		
 
-        res(purchaseContracts);
+	res(purchaseContracts);
     // } else {
 	// 	res("Internal server error occured", 500);
     // }
@@ -168,7 +161,7 @@ PUT('purchase-contract/update' 		, () => {
 });
 
 /* PC Delete */
-DELETE('purchase-contract/:id'  , () => {
+DELETE('purchase-contract/:id'  	, () => {
 	var data = param(),
 		rule = {
 			id : ['required' , 'exists:purchase_contracts']

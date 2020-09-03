@@ -1,8 +1,9 @@
 module.exports = {
 	/* JWT */
-    "jwt" 	: {
+    jwt 	: {
         "hash" 			: "0n41y7jHoUr1yyKooFrGIGD1yU1rfkl5chpw9MfNu5lN14cKOyGDzo7QzpQvXY9c",
-        "expiration"    : "1h", //1h, 30m
+		"expiration"    : "1h", //1h, 30m,
+		"global"		: false
 	},
 	
 	/* Server */
@@ -22,28 +23,13 @@ module.exports = {
 	db 		: {
 		active 		: true,
 		client 		: 'postgres', 	//mysql, postgres
-		port 		: '5433',
 		logging 	: true,
 
-		/* Public SCMT */
-		// host 		: '180.250.19.79',
-		// database 	: 'scmt',
-		// schema		: 'dev',	//postgres only
-		// username 	: 'postgres',
-		// password 	: 'sigma123',
-
-		/* Local SCMT */
-		// host 		: '127.0.0.1',
-		// database 	: 'scmt',
-		// schema		: 'dev',	//postgres only
-		// username 	: 'postgres',
-		// password 	: 'postgres',
-
-		/* Test SQM */
-		host 		: '10.62.169.52',
-		database 	: 'nossasqm',
-		schema		: 'public',	//postgres only
-		username 	: 'postgres',
-		password 	: 'SQM_b4r0k4h',
+		host 		: process.env.DB_HOST,
+		port 		: process.env.DB_PORT,
+		database 	: process.env.DB_NAME,
+		schema		: process.env.DB_SCHEMA,
+		username 	: process.env.DB_USERNAME,
+		password 	: process.env.DB_PASSWORD,
 	}
 };

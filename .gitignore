@@ -4,3 +4,4 @@ storage
 *.zip
 package-lock.json
 .vscode
+helper.js
