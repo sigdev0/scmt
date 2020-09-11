@@ -23,13 +23,20 @@ module.exports = {
 	db 		: {
 		active 		: true,
 		client 		: 'postgres', 	//mysql, postgres
-		logging 	: true,
+		logging 	: false,
 
-		host 		: process.env.DB_HOST,
-		port 		: process.env.DB_PORT,
-		database 	: process.env.DB_NAME,
-		schema		: process.env.DB_SCHEMA,
-		username 	: process.env.DB_USERNAME,
-		password 	: process.env.DB_PASSWORD,
+		// host 		: process.env.DB_HOST,
+		// port 		: process.env.DB_PORT,
+		// database 	: process.env.DB_NAME,
+		// schema		: process.env.DB_SCHEMA,
+		// username 	: process.env.DB_USERNAME,
+		// password 	: process.env.DB_PASSWORD,
+
+		host 		: '10.62.165.59',
+		port 		: '5432',
+		database 	: 'postgres',
+		schema		: 'dev',
+		username 	: 'postgres',
+		password 	: 'postgres',
 	}
 };

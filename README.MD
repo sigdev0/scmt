@@ -141,8 +141,6 @@ _assumes you declare `var photo = req('photo')` as variable holder for `photo` r
   - returns true if `param` is object
 - `isString(param)`
   - returns true if `param` is instance of string
-- `isUndefined(param)`
-  - returns true if `param` is undefined
 - `keys(object)`
   - returns keys of `object`
 - `log(content, dir)`

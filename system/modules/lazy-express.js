@@ -1,29 +1,55 @@
 module.exports = new class LazyExpress {
 
-	#express 		= require('express');
-	#app 			= null;
-	#server 		= null;
-	#multer 		= null;
-	#jwt 			= null;
+	#express 					= require('express');
+	#app 						= null;
+	#server 					= null;
+	#multer 					= null;
+	#jwt 						= null;
 
-	#request 		= null;
-	#response 		= null;
-	#next 			= null;
+	#request 					= null;
+	#response 					= null;
+	#next 						= null;
 
-	#corsEnabled 	= false;
-	#jwtEnabled 	= false;
-	#httpsEnabled 	= false;
+	#corsEnabled 				= false;
+	#jwtEnabled 				= false;
+	#httpsEnabled 				= false;
 
-	#jwtExclusions	= [/files\/*/];
-	#routeList		= [];
-	#autoRouteList 	= [];
+	#jwtExclusions				= [/files\/*/];
+	#routeList					= [];
+	#autoRouteList 				= [];
+
+	/* Twing */
+	#twingEnvironment 			= null;
+	#twingLoaderFilesystem 		= null;
+	#twingLoader 				= null;
+	#twingEnv 					= null;
+
+	/* Session */
+	#session 					= require('store');
+
+	/* Error Containers */
+	#errors 					= [];
 
 	constructor(){
-		this.#app 		= this.#express();		
+		/* Express */
+		this.#app 		= this.#express();	
 		this.#multer 	= require('multer')();		
+
+		/* Twing */
+		if(File.exists(spath('view_dir'))){
+			this.#twingEnvironment 			= require('twing').TwingEnvironment;
+			this.#twingLoaderFilesystem 	= require('twing').TwingLoaderFilesystem;
+			this.#twingLoader 				= new this.#twingLoaderFilesystem(spath('view_dir'));
+			this.#twingEnv 					= new this.#twingEnvironment(this.#twingLoader);
+		} else {
+			this.#errors.push(`- '${spath('view_dir')}' assigned for view files cannot be found, view functionality is disabled`);
+		}
 
 		this.#app.use(this.#express.json());
 		this.#app.use(this.#express.urlencoded({ extended: true }));
+
+		this.#initPublicDir();
+		this.#initSession();
 	}
 
 	#initCORS 				= () => {
@@ -39,28 +65,30 @@ module.exports = new class LazyExpress {
 		}
 	}
 
-	#initJWT 				= () => {
-        if(config('jwt.hash') && config('jwt.expiration')) {
-			this.#jwt = require('express-jwt')({
-				secret : config('jwt.hash'),
-				expire : config('jwt.expiration')
-			}).unless({
-				path : this.#jwtExclusions
-			});
-
-            this.#app.use(this.#jwt);
-            this.#app.use((error, req, res, next)  => {
-                if(error.status === 401) {
-                    if (!empty(error.inner.name) && error.inner.name === 'TokenExpiredError') {
-                        res.status(401).send({status : "ERROR", message : "Token expired..."});
-                    } else {
-                        res.status(401).send({status : "ERROR", message : "No authorization token was found..."});
-                    }
-                }
-			});
-			
-			this.#jwtEnabled = true;
-        }
+	#initJWT 				= (withJWT) => {
+        if(withJWT) {
+			if(config('jwt.hash') && config('jwt.expiration')) {
+				this.#jwt = require('express-jwt')({
+					secret : config('jwt.hash'),
+					expire : config('jwt.expiration')
+				}).unless({
+					path : this.#jwtExclusions
+				});
+	
+				this.#app.use(this.#jwt);
+				this.#app.use((error, req, res, next)  => {
+					if(error.status === 401) {
+						if (!empty(error.inner.name) && error.inner.name === 'TokenExpiredError') {
+							res.status(401).send({status : "ERROR", message : "Token expired..."});
+						} else {
+							res.status(401).send({status : "ERROR", message : "No authorization token was found..."});
+						}
+					}
+				});
+				
+				this.#jwtEnabled = true;
+			}
+		}
 	}
 
 	#initProtocol 			= () => {
@@ -80,11 +108,77 @@ module.exports = new class LazyExpress {
 		}
 	}
 
+	#initPublicDir 			= () => {
+		foreach(spath('public_dir'), (key, value) => {
+			this.#app.use(`/${key}`, this.#express.static(bpath(value)));
+		});
+	}
+
+	#initSession 			= () => {
+		global.session = this.#session;
+	}
+
+	#initStorageRoutes		= () => {
+		this.#app.get('/files/*', (req, res, next) => {
+			var parsedPath = 'storage';
+			foreach(split(req.params[0], '/'), (i, each) => {
+				parsedPath += '/' + each;
+			});
+
+			parsedPath = bpath(parsedPath);
+
+            if (File.exists(parsedPath)) {
+                res.sendFile(parsedPath);
+            } else {
+                var body = `
+                <!DOCTYPE html>
+                <html lang="en">
+                    <head>
+                        <meta charset="utf-8">
+                        <title>Error</title>
+                    </head>
+                    <body>
+                        <pre>Cannot GET /files/${req.params[0]}</pre>
+                    </body>
+                </html>`;
+
+                res.status(404).send(body);
+            }
+		});
+	}
+
+	#initStorageDownloader 	= () => {
+		this.#app.get('/download/*', (req, res, next) => {
+			var parsedPath = 'storage';
+			foreach(split(req.params[0], '/'), (i, each) => {
+				parsedPath += '/' + each;
+			});
+
+			parsedPath = bpath(parsedPath);
+
+            if (File.exists(parsedPath)) {
+                res.download(parsedPath);
+            } else {
+                var body = `
+                <!DOCTYPE html>
+                <html lang="en">
+                    <head>
+                        <meta charset="utf-8">
+                        <title>Error</title>
+                    </head>
+                    <body>
+                        <pre>Cannot download /files/${req.params[0]}</pre>
+                    </body>
+                </html>`;
+
+                res.status(404).send(body);
+            }
+		});
+	}
+
 	#assignREST 			= (method, url, action, withJWT = true) => {
 		if(startsWith(url, '/')) url = cutl(url, 1);
 		url = `/${url}`;
-
-		console.log(`${upper(method)}\t : ${url}`);
 
 		if(!withJWT) this.#jwtExclusions.push(url);
 		
@@ -101,7 +195,6 @@ module.exports = new class LazyExpress {
 					var lazyRequest = require('./lazy-request'),
 						data 		= {};
 	
-					// console.log(req);
 					lazyRequest = new lazyRequest(req);
 	
 					if(key.length > 1){
@@ -116,13 +209,13 @@ module.exports = new class LazyExpress {
 	
 					return lazyRequest;
 				};
-	
+
 				global.res 		= global.response 	= (message, statusCode = 200) => {
-					res.send(message).status(statusCode);
+					res.status(statusCode).send(message);
 				};
 	
-				global.end 		= () => {
-					res.end();
+				global.end 		= (param = '') => {
+					res.end(param);
 				};
 	
 				global.next 	= next;
@@ -147,6 +240,51 @@ module.exports = new class LazyExpress {
 				end();
 			},
 		});
+	}
+
+	#assignRoutes 			= (withJWT) => {
+		if(count(this.#routeList) > 0){
+			var middlewares = [this.#multer.any()],
+				lastSegment = '';
+
+			if(withJWT) middlewares.push(this.#jwt);
+	
+			console.log(`-----------------------`);
+			console.log(` >     ROUTE LIST    < `);
+			console.log(`-----------------------`);
+			foreach(this.#routeList, (i, each) => {
+				this.#app[each.method](each.url, middlewares, each.action);
+
+				if(split(each.url, '/')[1] !== lastSegment) console.log('', '');
+				console.log(`${upper(each.method)} \t: ${each.url}`);
+				
+				lastSegment = split(each.url, '/')[1];
+
+			})
+			console.log('', '');
+		}
+	}
+
+	#assignView 			= () => {
+		global.view 	= (view, data = {}) => {
+			if(empty(this.#errors)){
+				
+				foreach(spath('public_dir'), (key, value) => {
+					data[key] = key;
+				});
+
+				var rendered = null
+
+				this.#twingEnv.render(view, data).then((output) => {
+					rendered = output;
+				});
+				sync(() => rendered == null);
+
+				end(rendered);
+			} else {
+				end(`ERROR : '${spath('view_dir')}' not found, make sure directory & view files exist`, '');
+			}
+		}
 	}
 
 	#autoRegisterRoutes 	= (dir) => {
@@ -179,94 +317,44 @@ module.exports = new class LazyExpress {
 		return key ? request.headers[key] : request.headers;
 	};
 
-	serve = (withJWT = true) => {
-		/* Fake Files Routes */
-		this.#app.get('/files/*', (req, res, next) => {
-			var parsedPath = 'storage';
-			foreach(split(req.params[0], '/'), (i, each) => {
-				parsedPath += '/' + each;
-			});
-
-			parsedPath = bpath(parsedPath);
-
-            if (File.exists(parsedPath)) {
-                res.sendFile(parsedPath);
-            } else {
-                var body = `
-                <!DOCTYPE html>
-                <html lang="en">
-                    <head>
-                        <meta charset="utf-8">
-                        <title>Error</title>
-                    </head>
-                    <body>
-                        <pre>Cannot GET /files/${req.params[0]}</pre>
-                    </body>
-                </html>`;
-
-                res.status(404).send(body);
-            }
-		});
-
-		/* Download Uploaded Files Routes */
-		this.#app.get('/download/*', (req, res, next) => {
-			var parsedPath = 'storage';
-			foreach(split(req.params[0], '/'), (i, each) => {
-				parsedPath += '/' + each;
-			});
-
-			parsedPath = bpath(parsedPath);
-
-            if (File.exists(parsedPath)) {
-                res.download(parsedPath);
-            } else {
-                var body = `
-                <!DOCTYPE html>
-                <html lang="en">
-                    <head>
-                        <meta charset="utf-8">
-                        <title>Error</title>
-                    </head>
-                    <body>
-                        <pre>Cannot download /files/${req.params[0]}</pre>
-                    </body>
-                </html>`;
-
-                res.status(404).send(body);
-            }
-		});
+	serve 					= (withJWT = true) => {
+		/* Handle Storage Routes & Downloader */
+		this.#initStorageRoutes();
+		this.#initStorageDownloader();
 
 		/* Handle CORS, JWT and Protocol */
 		this.#initCORS();
 		this.#initProtocol();
+		this.#initJWT(withJWT);
 
-		if(withJWT) this.#initJWT();
+		/* Auto Register Routes & Assign Routes */
+		this.#autoRegisterRoutes(spath('api_dir'));
+		this.#assignRoutes(withJWT);
 
-		/* Auto Register Routes */
-		console.log(`-----------------------`);
-		console.log(` >     Route List    < `);
-		console.log(`-----------------------`);
-		this.#autoRegisterRoutes('routes');
-		console.log(``, ``);
+		/* Assign View */
+		this.#assignView();
 
-		/* Assign Route */
-		var middlewares = [this.#multer.any()];
-		if(withJWT) middlewares.push(this.#jwt);
-
-		foreach(this.#routeList, (i, each) => {
-			this.#app[each.method](each.url, middlewares, each.action);
-		})
-
+		/* Server Listener */
 		this.#server.listen(config('server.port'), () => {
 			console.log(`-----------------------`);
-			console.log(` >   SERVER STARTED   < `);
+			console.log(` >   SERVER STARTED   <`);
 			console.log(`-----------------------`);
 			console.log(`\`${config('server.name')} ${config('server.version')}\` running at port \`${config('server.port')}\``);
 			console.log(``);
 			console.log(`[${this.#httpsEnabled ? 'x' : ' '}] HTTPS enabled`);
 			console.log(`[${this.#corsEnabled ? 'x' : ' '}] CORS enabled`);
 			console.log(`[${this.#jwtEnabled ? 'x' :  ' '}] JWT enabled`);
-			console.log(``);
+			console.log(``, ``);
+
+			if(count(this.#errors) > 0){
+				console.log(`----------------`);
+				console.log(` >   ERRORS   < `)
+				console.log(`----------------`);
+				foreach(this.#errors, (i, each) => {
+					console.log(each);
+				});
+			}
+
 		});
 	}
 

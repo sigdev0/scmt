@@ -1,7 +1,5 @@
 .idea
 node_modules
-storage
+storage/*
 *.zip
 package-lock.json
-.vscode
-helper.js

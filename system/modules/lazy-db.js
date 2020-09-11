@@ -9,7 +9,7 @@ if (config('db.active') && global.knex == null) {
 			password 	: config('db.password'),
 			database 	: config('db.database'),
 			schema		: config('db.schema')
-		},
+		}
 	});
 
 	if (config('db.logging') && !knexLog) {
@@ -90,6 +90,17 @@ class LazyDB {
 		});
 
 		return empty(key) ? props : props[key];
+	}
+
+	/* Clear */
+	clearSelect 		= () => {
+		this.#knex.clearSelect();
+		return this;
+	}
+
+	clearWhere 			= () => {
+		this.#knex.clearWhere();
+		return this;
 	}
 
 	/* CRUD Action */
@@ -182,8 +193,10 @@ class LazyDB {
 		sync(() => message === null); this._init();
 
 		if(message){
-			var result = new LazyDB(this._attr());
-			foreach(this.where({id : message}).first(), (key, value) => {
+			var result 			= new LazyDB(this._attr()),
+				primaryValue	= hasKey(data, this.primary()) ? data[this.primary()] : message;
+
+			foreach(this.where({id : primaryValue}).first(), (key, value) => {
 				result[key] = value;
 			})
 
@@ -328,7 +341,13 @@ class LazyDB {
 	}
 
 	select              = (...column) => {
-		this.#knex.column(column);
+		if(count(column) === 1 && Array.isArray(column[0])){
+			foreach(column[0], (i, each) => {
+				this.#knex.column(each);
+			});
+		} else {
+			this.#knex.column(column);
+		}
 		return this;
 	}
 
@@ -375,7 +394,7 @@ class LazyDB {
 		// if (this.#processable) {
 
 		this.#knex.count().then((result) => {
-			message = +values(result[0]);
+			message = +values(empty(result) ? [0] : result[0]);
 			onSuccess(message);
 		}).catch((error) => {
 			message = false;
@@ -398,6 +417,41 @@ class LazyDB {
 		// 		body    : this.#error
 		// 	};
 		// }
+	}
+
+	datatable 			= (columnToSelect, columnToSearch) => {
+		this.select(columnToSelect);
+
+		var keyword = req('search').value;
+		if(!empty(keyword)) {
+			foreach(columnToSearch, (index, each) => {
+				if(i(index) == 0){
+					this.whereLike(each, keyword);
+				} else {
+					this.orWhereLike(each, keyword);
+				}
+			});
+		}
+
+		this.limit(req('length'));
+		this.offset(req('start'));
+		this.orderBy(columnToSelect[i(req('order')[0].column)], req('order')[0].dir)
+
+		var recordsTotal 	= this.instance().count(),
+			recordsFiltered = this.instance().clearSelect().count(),
+			data 			= [];
+
+		foreach(this.get(), (index, row) => {
+			row.index = (i(req('length')) * i(req('start'))) + i(index + 1);
+			data.push(row.props());
+		});
+
+		return {
+			draw 			: req('draw'),
+			recordsTotal 	: recordsTotal,
+			recordsFiltered : recordsFiltered,
+			data 			: data
+		};
 	}
 
 	exists              = (...callback) => {
@@ -886,13 +940,13 @@ module.exports.query 	= (...param) => {
 			onSuccess 	= count(param) > 1 ? param[1] : (result) => {},
 			onError 	= count(param) > 2 ? param[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message) };
 
-		knex.raw(query).then((result) => {
-			// console.log(result);
-			if(config('db.client') === 'postgres'){
-				message = result.rows;
-			} else if(config('db.client') === 'mysql'){
-				message = result[0];
-			}
+			knex.raw(query).then((result) => {
+				// console.log(result);
+				if(config('db.client') === 'postgres'){
+					message = result.rows;
+				} else if(config('db.client') === 'mysql'){
+					message = result[0];
+				}
 		}).catch((error) => {
 			message = false;
 			onError(`${String(error).toLowerCase().replace('error: ', 'ERROR [db.query]: ')}`);

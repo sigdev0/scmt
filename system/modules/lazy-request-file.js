@@ -44,7 +44,7 @@ module.exports = class LazyRequestFile {
                     fileName    = String(fileName || `${this.name}`).replace(/\s+/gi, '');
 
                 var available           = false,
-                    fullPath            = bpath(`storage/${directory}`),
+                    fullPath            = bpath(`${spath('upload_dir')}/${directory}`),
                     index               = 1,
                     uploadedFileName    = fileName + fileExt;
 

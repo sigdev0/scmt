@@ -2,9 +2,6 @@ module.exports = new class Lazify {
 
 	constructor() {
 
-		/* Server Level */
-		this.#assign('./modules/lazy-express');
-
 		/* Base Level */
 		this.#assign('./modules/lazy-data');
 		this.#assign('./modules/lazy-string');
@@ -16,6 +13,9 @@ module.exports = new class Lazify {
 		this.#assign('./modules/lazy-jwt');
 		this.#assign('./modules/lazy-db');
 		this.#assign('./modules/lazy-validator');
+
+		/* Server Level */
+		this.#assign('./modules/lazy-express');
 
 		this.#autoRegisterModel();
 	}
@@ -31,16 +31,20 @@ module.exports = new class Lazify {
 	};
 
 	#autoRegisterModel = () => {
-		var primaries = {};
-		File.list('app', (file, staticPath, dynamicPath) => {
-			var modelName = replace(file, '.js', '');
-			if(File.isFile(staticPath) && endsWith(file, 'js')){
-				var model = require(staticPath);
-				primaries[model._attr().table] = model._attr().primaryColumn;
-				global[modelName] = model;
-			} 
-		});
+		if(config('db.active')){
+			var primaries = {};
+			File.list('app', (file, staticPath, dynamicPath) => {
+				var modelName = replace(file, '.js', '');
+				if(File.isFile(staticPath) && endsWith(file, 'js')){
+					var model = require(staticPath);
+					primaries[model._attr().table] = model._attr().primaryColumn;
+					global[modelName] = model;
+				} 
+			});
 
-		global.primaries = primaries;
+			global.primaries = primaries;
+		} else {
+			console.log('Note : Database is not set to active, app models will not be autoregistered');
+		}
 	}
 };

@@ -1,7 +1,7 @@
 module.exports.Storage = new class LazyStorage {
 
     delete      = (file) => {
-        var parsedPath  = 'storage';
+        var parsedPath  = spath('upload_dir');
             file        = replace(file, 'files/', '');
 
         foreach(split(file, '/'), (i, each) => {
