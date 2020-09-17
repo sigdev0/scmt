@@ -104,13 +104,13 @@ class LazyDB {
 	}
 
 	/* CRUD Action */
-	add 				= (data = {}, condition = {}) => {	
+	add 				= (data = {}, condition = {}) => {
 		var //condition 		= this.#refineCondition({condition : condition, pkDefiner : condition}),
 			message 		= null,
-			
+
 			column 			= keys(data)[0],
 			value 			= values(data)[0],
-			
+
 			conditionColumn = keys(condition)[0],
 			conditionValue 	= values(condition)[0];
 
@@ -143,11 +143,11 @@ class LazyDB {
 			this.#knex.delete().then((result) => {
 				message = `Success [db.delete] : ` + JSON.stringify(condition);
 				onSuccess(message);
-			}).catch((error) => { 
+			}).catch((error) => {
 				message = false;
 				onError(`${String(error).toLowerCase().replace('error: ', 'ERROR [db.delete] : ')}`);
 			});
-			
+
 			sync(() => message === null); this._init();
 
 			// console.log(message);
@@ -213,7 +213,7 @@ class LazyDB {
 		// } else {
 		// 	onError(this.#error);
 
-		// 	return {    
+		// 	return {
 		// 		success : false,
 		// 		body    : this.#error
 		// 	};
@@ -226,13 +226,13 @@ class LazyDB {
 
 	}
 
-	sub 				= (data = {}, condition = {}) => {	
+	sub 				= (data = {}, condition = {}) => {
 		var //condition 		= this.#refineCondition({condition : condition, pkDefiner : condition}),
 			message 		= null,
-			
+
 			column 			= keys(data)[0],
 			value 			= values(data)[0],
-			
+
 			conditionColumn = keys(condition)[0],
 			conditionValue 	= values(condition)[0];
 
@@ -257,7 +257,7 @@ class LazyDB {
 			// console.log(result);
 			message = result;
 			onSuccess(message);
-		}).catch((error) => { 
+		}).catch((error) => {
 			message = false;
 			onError(`${String(error).toLowerCase().replace('error: ', 'ERROR [db.truncate]: ')}`);
 		});
@@ -278,7 +278,7 @@ class LazyDB {
 		// 		body    : this.#error
 		// 	};
 		// }
-		
+
 	}
 
 	update              = (...param) => {
@@ -300,7 +300,7 @@ class LazyDB {
 		// if (this.#processable) {
 		// condition   = this.#refineCondition(condition);
 		data 		= Object.assign(this.props(), data);
-		
+
 		// delete data[primary];
 
 		if(!this.#hasCondition) this.#knex.where(condition);
@@ -312,7 +312,7 @@ class LazyDB {
 			message = false;
 			onError(`${String(error).toLowerCase().replace('error: ', 'ERROR [db.update]: ')}`);
 		});
-		
+
 		sync(() => message === null); this._init();
 		if(message === 'success'){
 			message = this.where(condition).first();
@@ -359,7 +359,7 @@ class LazyDB {
 			onError     = count(param) > 2 ? param[2] : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message); };
 
 		// if (this.#processable) {
-			
+
 		this.#knex.avg(column).then((result) => {
 			message = +values(result[0]);
 			onSuccess(message);
@@ -420,6 +420,19 @@ class LazyDB {
 	}
 
 	datatable 			= (columnToSelect, columnToSearch) => {
+
+		var nullSearch 	= req('search') || null,
+			nullLength 	= req('length') || null,
+			nullStart 	= req('start') 	|| null,
+			nullOrder 	= req('order') 	|| null,
+			nullDraw 	= req('draw')	|| null;
+
+			console.log(nullSearch, nullLength, nullStart, nullOrder, nullDraw);
+
+		if(nullSearch == null || nullLength == null || nullStart == null || nullOrder == null || nullDraw == null){
+			return 'Warning : This endpoint is intended for Datatable Server Side, you cannot directly access this endpoint, please access this endpoint from Datatable';
+		}
+
 		this.select(columnToSelect);
 
 		var keyword = req('search').value;
@@ -470,7 +483,7 @@ class LazyDB {
 		});
 
 		sync(() => message === null); this._init();
-	
+
 		return message;
 
 		// 	return {
@@ -491,7 +504,7 @@ class LazyDB {
 		// if(!$.isEmpty(this.#info.primary)){
 		if (hasKey(this._attr(), 'primaryColumn')) {
 			var primaryColumn = this._attr().primaryColumn;
-	
+
 			return this.where(primaryColumn, value).first();
 		} else {
 			console.error('Error [LazyDB] : cannot use `find` function if no primary key is defined');
@@ -543,7 +556,7 @@ class LazyDB {
 		// 		body    : this.#error
 		// 	};
 		// }
-		
+
 	}
 
 	get                 = (...callback) => {
@@ -569,10 +582,10 @@ class LazyDB {
 				foreach(each, (key, value) => {
 					entity[key] = value;
 				});
-				
+
 				entity._init();
 				entities.push(entity);
-			});      
+			});
 
 			message = entities;
 			onSuccess(message);
@@ -591,7 +604,7 @@ class LazyDB {
 		// 		body    : this.#error
 		// 	};
 		// }
-		
+
 	}
 
 	max                 = (...param) => {
@@ -609,7 +622,7 @@ class LazyDB {
 				message = false;
 				onError(`${String(error).toLowerCase().replace('error: ', 'ERROR [db.max]: ')}`);
 			});
-	
+
 			sync(() => message === null); this._init();
 
 			return message;
@@ -692,7 +705,7 @@ class LazyDB {
 	// 			body    : this.#error
 	// 		};
 	// 	}
-	}	
+	}
 
 	/* Limit & Offset */
 	limit               = (limit) => {
@@ -751,7 +764,7 @@ class LazyDB {
 		this.#knex.rightOuterJoin(table, column1, column2);
 		return this;
 	}
-	
+
 	/* Having */
 	having              = (column, operator, value) => {
 		this.#knex.having(column, operator, value);
@@ -800,7 +813,7 @@ class LazyDB {
 		this.#hasCondition = true;
 		return this;
 	}
-	
+
 	/* Where OR */
 	orWhere             = (column, operator, value) => {
 		this.#knex.orWhere(column, operator, value);
@@ -833,7 +846,7 @@ class LazyDB {
 		this.#hasCondition = true;
 		return this;
 	}
-	
+
 	orWhereRaw          = (query, value) => {
 		this.#knex.orWhereRaw(query, value);
 		this.#hasCondition = true;
@@ -844,7 +857,7 @@ class LazyDB {
 		this.#knex.orWhereNot(column, operator, value);
 		this.#hasCondition = true;
 		return this;
-	}    
+	}
 
 	orWhereNotIn        = (column, value) => {
 		this.#knex.orWhereNotIn(column, value);
@@ -901,7 +914,7 @@ class LazyDB {
 		this.#hasCondition = true;
 		return this;
 	}
-	
+
 	whereRaw            = (query, value) => {
 		this.#knex.whereRaw(query, value);
 		this.#hasCondition = true;
@@ -912,7 +925,7 @@ class LazyDB {
 		this.#knex.whereNot(column, operator, value);
 		this.#hasCondition = true;
 		return this;
-	}    
+	}
 
 	whereNotIn          = (column, value) => {
 		this.#knex.whereNotIn(column, value);
