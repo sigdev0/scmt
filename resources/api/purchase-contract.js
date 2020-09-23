@@ -11,7 +11,7 @@ GET('purchase-contract/:id' 		, () => {
 
     validate(data, rule, () => {
 		var purchaseContract = PC 	.select('purchase_contracts.id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at',
-											'creators.username as created_by', 'updaters.username as updated_by', 'supplier_description')
+											'creators.username as created_by', 'updaters.username as updated_by', 'supplier_id' , 'supplier_description')
 									.leftJoin('users as creators', 'creators.id', 'purchase_contracts.created_by')
 									.leftJoin('users as updaters', 'updaters.id', 'purchase_contracts.updated_by')
 									.leftJoin('suppliers', 'suppliers.id', 'supplier_id')
@@ -19,7 +19,7 @@ GET('purchase-contract/:id' 		, () => {
 									.first();
 
 		if(purchaseContract){
-			var pcDetail = PCD 	.select('purchase_contract_details.id', 'quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_code', 'brand')
+			var pcDetail = PCD 	.select('purchase_contract_details.id', 'quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_id', 'product_code', 'products.description as product_description' ,'brand')
 								.leftJoin('products', 'products.id', 'product_id')
 								.where('purchase_contract_id', purchaseContract.id)
 								.get();
@@ -36,7 +36,7 @@ GET('purchase-contract/:id' 		, () => {
 /* PC List */
 GET('purchase-contracts' 			, () => {
     var result = PC .select('purchase_contracts.id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at',
-						'creators.username as created_by', 'updaters.username as updated_by', 'supplier_description')
+						'creators.username as created_by', 'updaters.username as updated_by', 'supplier_id', 'supplier_description')
 				.leftJoin('users as creators', 'creators.id', 'purchase_contracts.created_by')
 				.leftJoin('users as updaters', 'updaters.id', 'purchase_contracts.updated_by')
 				.leftJoin('suppliers', 'suppliers.id', 'supplier_id');
@@ -52,7 +52,7 @@ GET('purchase-contracts' 			, () => {
     // if(result.get()){
 	var purchaseContracts = [];
 	foreach(result.get(), (indexPC, eachPC) => {
-		var details = PCD 	.select('quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_code', 'brand')
+		var details = PCD 	.select('quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_id', 'product_code', 'products.description as product_description', 'brand')
 							.leftJoin('products', 'products.id', 'product_id')
 							.where('purchase_contract_id', eachPC.id)
 							.get();
