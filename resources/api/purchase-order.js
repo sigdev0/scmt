@@ -81,6 +81,24 @@ GET('purchase-orders'    		, () => {
     res(purchase_orders);
 });
 
+/* PO List Datatable */
+GET('purchase-orders-datatable', () => {
+    var instance 		= PO.instance(),
+        columnToSelect 	= [ 'purchase_orders.id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 
+							'processed_date', 'approved_date', 'cancelled_date', 'purchase_orders.created_at', 'purchase_orders.updated_at', 
+							'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 
+							'creators.username as created_by', 'updaters.username as updated_by', 'location_id', 'purchase_contract_id', 'supplier_id'],
+        columnToSearch 	= ['purchase_orders.number', 'purchase_orders.reference'];
+
+    instance.leftJoin('users as processors' , 'processors.id'   , 'purchase_orders.processed_by')
+			.leftJoin('users as approvers'  , 'approvers.id'    , 'purchase_orders.approved_by')
+			.leftJoin('users as cancellers' , 'cancellers.id'   , 'purchase_orders.cancelled_by')
+			.leftJoin('users as creators'   , 'creators.id'     , 'purchase_orders.created_by')
+			.leftJoin('users as updaters'   , 'updaters.id'     , 'purchase_orders.updated_by');
+
+    res(instance.datatable(columnToSelect, columnToSearch));
+});
+
 /* PO Insert */
 POST('purchase-order/insert' 	, function(){
 	var data = req( 'number', 'reference', 'status', 'currency', 'term_of_payment', 

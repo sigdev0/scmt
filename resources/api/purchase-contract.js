@@ -69,6 +69,19 @@ GET('purchase-contracts' 			, () => {
 
 });
 
+/* PC List Datatable */
+GET('purchase-contracts-datatable', () => {
+    var instance 		= PC.instance(),
+        columnToSelect 	= ['purchase_contracts.id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at', 'creators.username as created_by', 'updaters.username as updated_by', 'supplier_id', 'supplier_description'],
+        columnToSearch 	= ['purchase_contracts.number', 'purchase_contracts.reference'];
+
+    instance.leftJoin('users as creators', 'creators.id', 'purchase_contracts.created_by')
+			.leftJoin('users as updaters', 'updaters.id', 'purchase_contracts.updated_by')
+			.leftJoin('suppliers', 'suppliers.id', 'supplier_id');
+
+    res(instance.datatable(columnToSelect, columnToSearch));
+});
+
 /* PC Insert */
 POST('purchase-contract/insert' 	, () => {
 	var data = req('number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'created_by', 'supplier_id'),
