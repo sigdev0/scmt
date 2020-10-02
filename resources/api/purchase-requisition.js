@@ -159,7 +159,7 @@ PUT('purchase-requisition/update', () => {
 });
 
 /* PR Delete */
-DELETE('purchase-requisition/:id', () => {
+DELETE('purchase-requisition/delete/:id', () => {
     var data = param(),
         rule = {
             id: ['required', 'exists:purchase_requisitions']
@@ -183,7 +183,7 @@ DELETE('purchase-requisition/:id', () => {
 });
 
 /* Set Approval, Cancel and Process */
-PUT('purchase-requisition/:action/:id', () => {
+PUT('purchase-requisition/set-status/:action/:id', () => {
     var data = Object.assign(param(), req().all()),
         rule = {
             id: ['required', 'exists:purchase_requisitions'],

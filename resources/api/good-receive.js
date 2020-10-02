@@ -195,7 +195,7 @@ PUT('good-receive/update', () => {
 });
 
 /* GR Delete */
-DELETE('good-receive/:id'  , () => {
+DELETE('good-receive/delete/:id'  , () => {
 	var data = param(),
 		rule = {
 			id : ['required' , 'exists:good_receives']

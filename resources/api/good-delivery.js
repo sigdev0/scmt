@@ -198,7 +198,7 @@ PUT('good-delivery/update', () => {
 });
 
 /* GD Delete */
-DELETE('good-delivery/:id'  , () => {
+DELETE('good-delivery/delete/:id'  , () => {
 	var data = param(),
 		rule = {
 			id : ['required' , 'exists:good_deliveries']

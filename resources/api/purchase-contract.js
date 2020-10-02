@@ -174,7 +174,7 @@ PUT('purchase-contract/update' 		, () => {
 });
 
 /* PC Delete */
-DELETE('purchase-contract/:id'  	, () => {
+DELETE('purchase-contract/delete/:id'  	, () => {
 	var data = param(),
 		rule = {
 			id : ['required' , 'exists:purchase_contracts']

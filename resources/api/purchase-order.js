@@ -211,7 +211,7 @@ PUT('purchase-order/update' 	, function(){
 });
 
 /* PO Delete */
-DELETE('purchase-order/:id'  , () => {
+DELETE('purchase-order/delete/:id'  , () => {
 	var data = param(),
 		rule = {
 			id : ['required' , 'exists:purchase_orders']
@@ -230,7 +230,7 @@ DELETE('purchase-order/:id'  , () => {
 });
 
 /* Set Approval, Cancel and Process */
-PUT('purchase-order/:action/:id', () => {
+PUT('purchase-order/set-status/:action/:id', () => {
 	var data = Object.assign(param(), req().all()),
 		rule = {
 			id 		: ['required', 'exists:purchase_orders'],
