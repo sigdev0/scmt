@@ -83,14 +83,19 @@ GET('purchase-requisitions-datatable', () => {
 
 /* PR Insert */
 POST('purchase-requisition/insert', () => {
-    var data = req('number', 'remarks', 'status', 'created_by'),
+    var data = req('number', 'remarks', 'status', 'created_by', 'status', 'photo'),
         rule = {
             number: ['required', 'unique:purchase_requisitions'],
+            status : ['required', 'in:active,pending,cancel'],
             created_by: ['required', 'exists:users,id']
         };
 
     validate(data, rule, () => {
         data.id = PR.max('id') + 1;
+        
+        // data.status = req('status');
+        // data.photo = req().file('photo').save('photos/');
+
         data.created_at = now(true);
         data.updated_at = now(true);
 

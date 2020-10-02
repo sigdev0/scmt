@@ -151,13 +151,13 @@ POST('good-delivery/insert', () => {
 
 /* GD Update */
 PUT('good-delivery/update', () => {
-	var data = req('id', 'number', 'remarks', 'status', 'package_count', 'created_by', 'business_unit_id', 'supplier_id', 'warehouse_id', 'purchase_order_id'),
+	var data = req('id', 'number', 'remarks', 'status', 'package_count', 'updated_by', 'business_unit_id', 'supplier_id', 'warehouse_id', 'purchase_order_id'),
 		rule = {
 			number 				: ['required', 'unique:good_deliveries,number,' + data.id],
 			remarks 			: ['required'],
 			status 				: ['required'],
 			package_count 		: ['required', 'numeric'],
-			created_by 			: ['required', 'exists:users,id'],
+			updated_by 			: ['required', 'exists:users,id'],
 			business_unit_id 	: ['required', 'exists:locations,id'],
 			warehouse_id 		: ['required', 'exists:locations,id'],
 			supplier_id 		: ['required', 'exists:suppliers,id'],
