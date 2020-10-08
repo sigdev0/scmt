@@ -41,7 +41,7 @@ GET('good-delivery/:id', () => {
 });
 
 /* GD List */
-GET('good-deliveries', () => {
+GET('good-delivery', () => {
 	var result = GD.select( 'good_deliveries.id', 'good_deliveries.number', 'good_deliveries.status', 'good_deliveries.remarks', 'good_deliveries.package_count', 
 							'good_deliveries.created_at', 'good_deliveries.updated_at', 'good_deliveries.approved_at', 
 							'creators.username as created_by', 'updaters.username as updated_by', 'approvers.username as approved_by',
@@ -81,7 +81,7 @@ GET('good-deliveries', () => {
 });
 
 /* GD List Datatable */
-GET('good-deliveries-datatable', () => {
+GET('good-delivery-datatable', () => {
     var instance 		= GD.instance(),
         columnToSelect 	= [ 'good_deliveries.id', 'good_deliveries.number', 'good_deliveries.status', 'good_deliveries.remarks', 'good_deliveries.package_count', 
 							'good_deliveries.created_at', 'good_deliveries.updated_at', 'good_deliveries.approved_at', 
@@ -210,6 +210,48 @@ DELETE('good-delivery/delete/:id'  , () => {
 
         if(detailsDeleted && mainDeleted){
             res(`Good Delivery with ID '${data.id}' successfully deleted`);
+        } else {
+            res('Internal server error occured', 500);
+        }
+    });
+});
+
+/* GD Details Update */
+PUT('good-delivery-details/update/:id', () => {
+    var data = param(),
+        rule = {
+            id : ['required', 'exists:good_delivery_details']
+        };
+    
+    validate(data, rule, () => {
+        var data = {
+            package_number 	: req('package_number'),
+			serial_number 	: req('serial_number'),
+			remarks 		: req('remarks'),
+			package_count 	: req('package_count'),
+			updated_at 		: now(true),
+			product_id 		: req('product_id'),
+        };
+
+        var details = GDD.update(data, {id : data.id});
+        if(details){
+            res(details) 
+        } else {
+            res('Internal server error occured', 500);
+        }
+    });
+});
+
+/* GD Details Delete */
+DELETE('good-delivery-details/delete/:id', () => {
+    var data = param(),
+        rule = {
+            id: ['required', 'exists:good_delivery_details']
+        };
+
+    validate(data, rule, () => {
+        if (GDD.delete({ id: data.id })) {
+            res(`Good Delivery Details with ID '${data.id}' successfully deleted`);
         } else {
             res('Internal server error occured', 500);
         }

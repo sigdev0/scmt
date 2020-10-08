@@ -16,6 +16,7 @@ module.exports = new class LazyExpress {
 
 	#jwtExclusions				= [/files\/*/];
 	#routeList					= [];
+	#routeLog					= [];
 	#autoRouteList 				= [];
 
 	/* Twing */
@@ -244,24 +245,16 @@ module.exports = new class LazyExpress {
 
 	#assignRoutes 			= (withJWT) => {
 		if(count(this.#routeList) > 0){
-			var middlewares = [this.#multer.any()],
-				lastSegment = '';
+			var middlewares = [this.#multer.any()];
 
 			if(withJWT) middlewares.push(this.#jwt);
-	
-			console.log(`-----------------------`);
-			console.log(` >     ROUTE LIST    < `);
-			console.log(`-----------------------`);
 			foreach(this.#routeList, (i, each) => {
+				this.#routeLog.push({
+					method 	: upper(each.method),
+					url 	: each.url
+				});
 				this.#app[each.method](each.url, middlewares, each.action);
-
-				if(split(each.url, '/')[1] !== lastSegment) console.log('', '');
-				console.log(`${upper(each.method)} \t: ${each.url}`);
-				
-				lastSegment = split(each.url, '/')[1];
-
 			})
-			console.log('', '');
 		}
 	}
 
@@ -331,11 +324,52 @@ module.exports = new class LazyExpress {
 		this.#autoRegisterRoutes(spath('api_dir'));
 		this.#assignRoutes(withJWT);
 
+		/* Add Endpoint to Display Routes */
+		this.#routeLog.push({
+			method 	: 'GET',
+			url		: '/routes'
+		});
+
+		var tempRoute = this.#routeLog;
+		this.#app['get']('/routes', function(req, res){
+			var routes 	=`<table align='center' border='1' cellspacing='0' cellpadding='4'><thead><tr><th align='center' style='font-weight:bold'>Method</th><th>URL</th></tr></thead><tbody>`,
+				last 	='%';
+
+			foreach(tempRoute, (i, each) => {
+				if((!contains(split(each.url, '/')[1], last) && !contains(last, split(each.url, '/')[1])) || last === '') routes += `<tr><td colspan='2' style='background:darkgrey;'></td></tr>`;
+
+				routes += `<tr><td>${each.method}</td><td>${each.url}</td></tr>`;
+				
+				last = split(each.url, '/')[1];
+			});
+
+			routes += `</tbody></table>`;
+
+			res.send(routes);
+
+		});
+
+		
+
 		/* Assign View */
 		this.#assignView();
 
 		/* Server Listener */
 		this.#server.listen(config('server.port'), () => {
+			var last = '%';
+
+			console.log(`-----------------------`);
+			console.log(` >     ROUTE LIST    < `);
+			console.log(`-----------------------`);
+			foreach(this.#routeLog, (i, each) => {
+				if((!contains(split(each.url, '/')[1], last) && !contains(last, split(each.url, '/')[1])) || last === '') console.log('');
+
+				console.log(`${each.method}\t: ${each.url}`);
+				
+				last = split(each.url, '/')[1];
+			});
+			console.log('', '');
+
 			console.log(`-----------------------`);
 			console.log(` >   SERVER STARTED   <`);
 			console.log(`-----------------------`);

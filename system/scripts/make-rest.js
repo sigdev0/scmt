@@ -3,6 +3,7 @@ const 	Path 			= require('../modules/lazy-path'),
 		File 			= require('../modules/lazy-file').File,
 		Str 			= require('../modules/lazy-string'),
 		Dir 			= require('../path'),
+		Voca 			= require('voca'),
 		
 		modelName 		= process.argv[2],
 		tableName		= process.argv[3],
@@ -23,7 +24,7 @@ module.exports = new ${modelName}()._init();`);
 console.log(`Model '${modelName}' generated...`);
 
 /* API Creation */
-var routeName = Str.replace(Str.lower(tableName), '_', '-');
+var routeName = Voca.slugify(modelName);
 
 File.mkdirs(`./${Dir.api_dir}`)
 File.write(`./${Dir.api_dir}/${routeName}.js`, `/* ${modelName} Details */
@@ -112,7 +113,7 @@ PUT('${routeName}/update' 		, () => {
 });
 
 /* ${modelName} Delete */
-DELETE('${routeName}/:id'     	, () => {
+DELETE('${routeName}/delete/:id', () => {
 	var data = param(),
 		rule = {
 			id : ['required']

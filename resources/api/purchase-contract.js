@@ -34,7 +34,7 @@ GET('purchase-contract/:id' 		, () => {
 });
 
 /* PC List */
-GET('purchase-contracts' 			, () => {
+GET('purchase-contract' 			, () => {
     var result = PC .select('purchase_contracts.id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at',
 						'creators.username as created_by', 'updaters.username as updated_by', 'supplier_id', 'supplier_description')
 				.leftJoin('users as creators', 'creators.id', 'purchase_contracts.created_by')
@@ -70,7 +70,7 @@ GET('purchase-contracts' 			, () => {
 });
 
 /* PC List Datatable */
-GET('purchase-contracts-datatable', () => {
+GET('purchase-contract-datatable', () => {
     var instance 		= PC.instance(),
         columnToSelect 	= ['purchase_contracts.id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at', 'creators.username as created_by', 'updaters.username as updated_by', 'supplier_id', 'supplier_description'],
         columnToSearch 	= ['purchase_contracts.number', 'purchase_contracts.reference'];
@@ -193,6 +193,48 @@ DELETE('purchase-contract/delete/:id'  	, () => {
             } else {
                 res('Internal server error occured', 500)
             }
+        }
+    });
+});
+
+/* PC Details Update */
+PUT('purchase-contract-details/update/:id', () => {
+    var data = param(),
+        rule = {
+            id : ['required', 'exists:purchase_contract_details']
+        };
+    
+    validate(data, rule, () => {
+        var data = {
+            quantity                : req('quantity'),
+			price                   : req('price'),
+			guarantee_period        : req('guarantee_period'),
+			guarantee_duration      : req('guarantee_duration'),
+			product_id              : req('product_id'),
+			updated_at              : now(true),
+        };
+
+        var details = PCD.update(data, {id : data.id});
+        if(details){
+            res(details) 
+        } else {
+            res('Internal server error occured', 500);
+        }
+    });
+});
+
+/* PC Details Delete */
+DELETE('purchase-contract-details/delete/:id', () => {
+    var data = param(),
+        rule = {
+            id: ['required', 'exists:purchase_contract_details']
+        };
+
+    validate(data, rule, () => {
+        if (PCD.delete({ id: data.id })) {
+            res(`Purchase Contract Details with ID '${data.id}' successfully deleted`);
+        } else {
+            res('Internal server error occured', 500);
         }
     });
 });

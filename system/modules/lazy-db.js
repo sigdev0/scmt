@@ -757,31 +757,31 @@ class LazyDB {
 	
 	/* Having */
 	having              = (column, operator, value) => {
-		this.#knex.having(column, operator, value);
+		if(typeof column === 'function') this.#knex.having(column); else this.#knex.having(column, operator, value);
 		this.#hasCondition = true;
 		return this;
 	}
 
 	havingBetween       = (column, value) => {
-		this.#knex.havingBetween(column, value);
+		if(typeof column === 'function') this.#knex.havingBetween(column); else this.#knex.havingBetween(column, value);
 		this.#hasCondition = true;
 		return this;
 	}
 
 	havingIn            = (column, value) => {
-		this.#knex.havingIn(column, value);
+		if(typeof column === 'function') this.#knex.havingIn(column); else this.#knex.havingIn(column, value);
 		this.#hasCondition = true;
 		return this;
 	}
 
 	havingNotBetween    = (column, value) => {
-		this.#knex.havingNotBetween(column, value);
+		if(typeof column === 'function') this.#knex.havingNotBetween(column); else this.#knex.havingNotBetween(column, value);
 		this.#hasCondition = true;
 		return this;
 	}
 
 	havingNotIn         = (column, value) => {
-		this.#knex.havingNotIn(column, value);
+		if(typeof column === 'function') this.#knex.havingNotIn(column); else this.#knex.havingNotIn(column, value);
 		this.#hasCondition = true;
 		return this;
 	}
@@ -806,19 +806,19 @@ class LazyDB {
 	
 	/* Where OR */
 	orWhere             = (column, operator, value) => {
-		this.#knex.orWhere(column, operator, value);
+		if(typeof column === 'function') this.#knex.orWhere(column); else this.#knex.orWhere(column, operator, value);
 		this.#hasCondition = true;
 		return this;
 	}
 
 	orWhereBetween      = (column, range) => {
-		this.#knex.orWhereBetween(column, range);
+		if(typeof column === 'function') this.#knex.orWhereBetween(column); else this.#knex.orWhereBetween(column, range);
 		this.#hasCondition = true;
 		return this;
 	}
 
 	orWhereIn           = (column, value) => {
-		this.#knex.orWhereIn(column, value);
+		if(typeof column === 'function') this.#knex.orWhereIn(column); else this.#knex.orWhereIn(column, value);
 		this.#hasCondition = true;
 		return this;
 	}
@@ -844,13 +844,13 @@ class LazyDB {
 	}
 
 	orWhereNot          = (column, operator, value) => {
-		this.#knex.orWhereNot(column, operator, value);
+		if(typeof column === 'function') this.#knex.orWhereNot(column); else this.#knex.orWhereNot(column, operator, value);
 		this.#hasCondition = true;
 		return this;
 	}    
 
 	orWhereNotIn        = (column, value) => {
-		this.#knex.orWhereNotIn(column, value);
+		if(typeof column === 'function') this.#knex.OrWhereNotIn(column); else this.#knex.orWhereNotIn(column, value);
 		this.#hasCondition = true;
 		return this;
 	}
@@ -862,7 +862,7 @@ class LazyDB {
 	}
 
 	orWhereNotBetween   = (column, range) => {
-		this.#knex.orWhereNotBetween(column, range);
+		if(typeof column === 'function') this.#knex.orWhereNotBetween(column); else this.#knex.orWhereNotBetween(column, range);
 		this.#hasCondition = true;
 		return this;
 	}
@@ -894,7 +894,7 @@ class LazyDB {
 	whereLike           = (column, value) => {
 		value = String(value).replace(`"`,``).replace(`'`,``).toLowerCase();
 
-		if(typeof column === 'function') this.#knex.where(column); else this.#knex.where(knex.raw(`LOWER(${column}) LIKE '%${value}%'`));
+		this.#knex.where(knex.raw(`LOWER(${column}) LIKE '%${value}%'`));
 		this.#hasCondition = true;
 		return this;
 	}
@@ -912,13 +912,13 @@ class LazyDB {
 	}
 
 	whereNot            = (column, operator, value) => {
-		this.#knex.whereNot(column, operator, value);
+		if(typeof column === 'function') this.#knex.whereNot(column); else this.#knex.whereNot(column, operator, value);
 		this.#hasCondition = true;
 		return this;
 	}    
 
 	whereNotIn          = (column, value) => {
-		this.#knex.whereNotIn(column, value);
+		if(typeof column === 'function') this.#knex.whereNotIn(column); else this.#knex.whereNotIn(column, value);
 		this.#hasCondition = true;
 		return this;
 	}
@@ -930,7 +930,7 @@ class LazyDB {
 	}
 
 	whereNotBetween     = (column, range) => {
-		this.#knex.whereNotBetween(column, range);
+		if(typeof column === 'function') this.#knex.whereNotBetween(column); else this.#knex.whereNotBetween(column, range);
 		this.#hasCondition = true;
 		return this;
 	}

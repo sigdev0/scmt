@@ -31,7 +31,7 @@ GET('purchase-requisition/:id', () => {
 });
 
 /* PR List */
-GET('purchase-requisitions', () => {
+GET('purchase-requisition', () => {
     var pr = PR.instance();
 
     pr.select('purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by')
@@ -67,7 +67,7 @@ GET('purchase-requisitions', () => {
 });
 
 /* PR List Datatable */
-GET('purchase-requisitions-datatable', () => {
+GET('purchase-requisition-datatable', () => {
     var instance = PR.instance(),
         columnToSelect = ['purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by'],
         columnToSearch = ['purchase_requisitions.number', 'purchase_requisitions.remarks'];
@@ -223,6 +223,47 @@ PUT('purchase-requisition/set-status/:action/:id', () => {
 
         if (purchase_requisition.update()) {
             res(`Purchase Requisition with ID '${data.id}' successfully '${action}'`);
+        } else {
+            res('Internal server error occured', 500);
+        }
+    });
+});
+
+/* PR Details Update */
+PUT('purchase-requisition-details/update/:id', () => {
+    var data = param(),
+        rule = {
+            id : ['required', 'exists:purchase_requisition_details']
+        };
+    
+    validate(data, rule, () => {
+        var data = {
+            quantity        : req('quantity'),
+            target_date     : req('target_date'),
+            updated_at      : now(true),
+            product_id      : req('product_id'),
+            location_id     : req('location_id'),
+        };
+
+        var details = PRD.update(data, {id : data.id});
+        if(details){
+            res(details) 
+        } else {
+            res('Internal server error occured', 500);
+        }
+    });
+});
+
+/* PR Details Delete */
+DELETE('purchase-requisition-details/delete/:id', () => {
+    var data = param(),
+        rule = {
+            id: ['required', 'exists:purchase_requisition_details']
+        };
+
+    validate(data, rule, () => {
+        if (PRD.delete({id : data.id})) {
+            res(`Purchase Requisition Details with ID '${data.id}' successfully deleted`);
         } else {
             res('Internal server error occured', 500);
         }

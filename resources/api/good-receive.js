@@ -42,7 +42,7 @@ GET('good-receive/:id', () => {
 });
 
 /* GR List */
-GET('good-receives', () => {
+GET('good-receive', () => {
 	var result = GR.select( 'good_receives.id', 'good_receives.number', 'good_receives.status', 'good_receives.remarks',
 							'good_receives.created_at', 'good_receives.updated_at', 'good_receives.approved_at', 
 							'creators.username as created_by', 'updaters.username as updated_by', 'approvers.username as approved_by',
@@ -83,7 +83,7 @@ GET('good-receives', () => {
 });
 
 /* GR List Datatable */
-GET('good-receives-datatable', () => {
+GET('good-receive-datatable', () => {
     var instance 		= GR.instance(),
         columnToSelect 	= [ 'good_receives.id', 'good_receives.number', 'good_receives.status', 'good_receives.remarks',
 							'good_receives.created_at', 'good_receives.updated_at', 'good_receives.approved_at', 
@@ -207,6 +207,48 @@ DELETE('good-receive/delete/:id'  , () => {
 
         if(detailsDeleted && mainDeleted){
             res(`Good Receive with ID '${data.id}' successfully deleted`);
+        } else {
+            res('Internal server error occured', 500);
+        }
+    });
+});
+
+/* GR Details Update */
+PUT('good-receive-details/update/:id', () => {
+    var data = param(),
+        rule = {
+            id : ['required', 'exists:good_receive_details']
+        };
+    
+    validate(data, rule, () => {
+        var data = {
+            serial_number 		: req('serial_number'),
+			remarks 			: req('remarks'),
+			updated_at 			: now(true),
+			item_id 			: req('item_id'),
+			product_id 			: req('product_id'),
+			purchase_order_id 	: req('purchase_order_id'),
+        };
+
+        var details = GDD.update(data, {id : data.id});
+        if(details){
+            res(details) 
+        } else {
+            res('Internal server error occured', 500);
+        }
+    });
+});
+
+/* GR Details Delete */
+DELETE('good-receive-details/delete/:id', () => {
+    var data = param(),
+        rule = {
+            id: ['required', 'exists:good_receive_details']
+        };
+
+    validate(data, rule, () => {
+        if (GRD.delete({ id: data.id })) {
+            res(`Good Receive Details with ID '${data.id}' successfully deleted`);
         } else {
             res('Internal server error occured', 500);
         }

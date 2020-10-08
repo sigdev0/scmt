@@ -3,3 +3,4 @@ node_modules
 storage/*
 *.zip
 package-lock.json
+.vscode

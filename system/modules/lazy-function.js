@@ -6,6 +6,7 @@ module.exports = new class LazyFunction {
 	#sha1 		= null;
 	#uuid 		= null;
 	#sync 		= null;
+	#voca 		= null;
 
 	constructor(){
 		this.#sync 			= require('deasync');
@@ -14,6 +15,7 @@ module.exports = new class LazyFunction {
 		this.#md5 			= require('md5');
 		this.#sha1 			= require('sha1');
 		this.#uuid 			= require('uuid').v1;
+		this.#voca 			= require('voca');
 	}
 
 	count 			= (param) => {
@@ -46,7 +48,7 @@ module.exports = new class LazyFunction {
 		var keys = Object.keys(collection);
 
 		for(var i = 0; i < keys.length; i++){
-			callback(keys[i], collection[keys[i]]);
+			callback(parseInt(keys[i]), collection[keys[i]]);
 		}
 	}
 
@@ -168,6 +170,10 @@ module.exports = new class LazyFunction {
 
 	values 		= (param) => {
 		return Object.values(param);
+	}
+
+	voca 		= () => {
+		return this.#voca;
 	}
 	
 

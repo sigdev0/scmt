@@ -40,7 +40,7 @@ GET('purchase-order/:id' 		, () => {
 });
 
 /* PO List */
-GET('purchase-orders'    		, () => {
+GET('purchase-order'    		, () => {
     var result = PO.instance();
 
     result 	.select('purchase_orders.id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 
@@ -82,7 +82,7 @@ GET('purchase-orders'    		, () => {
 });
 
 /* PO List Datatable */
-GET('purchase-orders-datatable', () => {
+GET('purchase-order-datatable', () => {
     var instance 		= PO.instance(),
         columnToSelect 	= [ 'purchase_orders.id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 
 							'processed_date', 'approved_date', 'cancelled_date', 'purchase_orders.created_at', 'purchase_orders.updated_at', 
@@ -269,4 +269,47 @@ PUT('purchase-order/set-status/:action/:id', () => {
 			res('Internal server error occured', 500);
 		}
 	});
+});
+
+/* PO Details Update */
+PUT('purchase-order-details/update/:id', () => {
+    var data = param(),
+        rule = {
+            id : ['required', 'exists:purchase_order_details']
+        };
+    
+    validate(data, rule, () => {
+        var data = {
+            quantity 				: req('quantity'),
+			quantity_outstanding 	: req('quantity_outstanding'),
+			updated_at 				: now(),
+			product_id 				: req('product_id'),
+			business_unit_id 		: req('business_unit_id'),
+			warehouse_id 			: req('warehouse_id'),
+			purchase_order_id 		: req('purchase_order_id'),
+        };
+
+        var details = POD.update(data, {id : data.id});
+        if(details){
+            res(details) 
+        } else {
+            res('Internal server error occured', 500);
+        }
+    });
+});
+
+/* PO Details Delete */
+DELETE('purchase-order-details/delete/:id', () => {
+    var data = param(),
+        rule = {
+            id: ['required', 'exists:purchase_order_details']
+        };
+
+    validate(data, rule, () => {
+        if (POD.delete({ id: data.id })) {
+            res(`Purchase Order Details with ID '${data.id}' successfully deleted`);
+        } else {
+            res('Internal server error occured', 500);
+        }
+    });
 });
