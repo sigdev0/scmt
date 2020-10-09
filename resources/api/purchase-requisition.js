@@ -243,20 +243,59 @@ GET('purchase-requisition-details-datatable/:id', () => {
         };
     
     validate(data, rule, () => {
-        // var keyword     = req('search').value   || '',
-        //     limit       = req('length')         || 10,
-        //     start       = req('start')          || 0,
-        //     orderBy     = i(req('order')[0].column) || 0,
-        //     orderType   = req('order')[0].dir;
-        
-        // this.orderBy(columnToSelect[i(req('order')[0].column)], req('order')[0].dir);
-        var details = query(`select 
-                             from dev.purchase_requisition_details
-                             join dev.products on products.id = product_id
-                             join dev.locations on locations.id = location_id
-                             where purchase_requisition_id = '${data.id}'`).get();
+        var columnToSelect  = ['purchase_requisition_details.id', 'quantity', 'target_date', 'purchase_requisition_details.created_at', 'purchase_requisition_details.updated_at', 'product_id', 'product_code', 'products.description', 'location_id', 'location_code', 'locations.description as location_description']
+            columnToSearch  = ['product_code', 'location_code'],
+            keyword         = req('search').value,
+            length          = req('length'),
+            start           = req('start'),
+            orderBy         = i(req('order')[0].column),
+            orderType       = req('order')[0].dir;
+            // keyword         = '',
+            // length          = 10,
+            // start           = 0,
+            // orderBy         = '-',
+            // orderType       = '-';
 
-        res(details);
+        var whereQuery  = '',
+            orderQuery  = '',
+            limitQuery  = `LIMIT ${length} OFFSET ${start}`;
+
+        foreach(columnToSearch, (index, each) => {
+            whereQuery += (i(index) === 0 ? '' : ' OR ') + `${each} LIKE '%${keyword}%'`;
+        });
+
+        if(orderBy !== '-' && orderType !== '-'){
+            orderQuery = `ORDER BY ${columnToSelect[orderBy]} ${orderType}`;
+        }
+
+        var recordsTotal    = PRD.instance().count(),
+        
+            recordsFiltered = query(`SELECT COUNT(*) AS total
+                                     FROM dev.purchase_requisition_details
+                                     JOIN dev.products  ON products.id  = product_id
+                                     JOIN dev.locations ON locations.id = location_id
+                                     WHERE purchase_requisition_id = '${data.id}'`).first().total,
+
+            rawResult       = query(`SELECT ${columnToSelect.join(', ')}
+                                     FROM dev.purchase_requisition_details
+                                     JOIN dev.products  ON products.id  = product_id
+                                     JOIN dev.locations ON locations.id = location_id
+                                     WHERE purchase_requisition_id = '${data.id}' AND (${whereQuery})
+                                     ${orderQuery}
+                                     ${limitQuery}`).get();
+
+        var result = [];
+        foreach(rawResult, (index, row) => {
+            row.index = (i(length)) * i(start) + (i(index) + 1);
+			result.push(row);
+        });
+        
+        res({
+            draw 			: req('draw'),
+			recordsTotal 	: recordsTotal,
+			recordsFiltered : recordsFiltered,
+			data 			: result
+        });
     });
 });
 

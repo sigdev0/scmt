@@ -197,6 +197,74 @@ DELETE('purchase-contract/delete/:id'  	, () => {
     });
 });
 
+/*
+ *
+ * Details
+ *
+ */
+
+/* PC Details Datatable */
+GET('purchase-contract-details-datatable/:id', () => {
+    var data = param(),
+        rule = {
+            id : ['required', 'exists:purchase_contracts']
+        };
+    
+    validate(data, rule, () => {
+        var columnToSelect  = ['purchase_contract_details.id', 'quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_id', 'product_code', 'products.description as product_description' ,'brand']
+            columnToSearch  = ['product_code', 'brand'],
+            keyword         = req('search').value,
+            length          = req('length'),
+            start           = req('start'),
+            orderBy         = i(req('order')[0].column),
+            orderType       = req('order')[0].dir;
+            // keyword         = '',
+            // length          = 10,
+            // start           = 0,
+            // orderBy         = '-',
+            // orderType       = '-';
+
+        var whereQuery  = '',
+            orderQuery  = '',
+            limitQuery  = `LIMIT ${length} OFFSET ${start}`;
+
+        foreach(columnToSearch, (index, each) => {
+            whereQuery += (i(index) === 0 ? '' : ' OR ') + `${each} LIKE '%${keyword}%'`;
+        });
+
+        if(orderBy !== '-' && orderType !== '-'){
+            orderQuery = `ORDER BY ${columnToSelect[orderBy]} ${orderType}`;
+        }
+
+        var recordsTotal    = PCD.instance().count(),
+        
+            recordsFiltered = query(`SELECT COUNT(*) AS total
+                                     FROM dev.purchase_contract_details
+                                     JOIN dev.products  ON products.id  = product_id
+                                     WHERE purchase_contract_id = '${data.id}'`).first().total,
+
+            rawResult       = query(`SELECT ${columnToSelect.join(', ')}
+                                     FROM dev.purchase_contract_details
+                                     JOIN dev.products  ON products.id  = product_id
+                                     WHERE purchase_contract_id = '${data.id}' AND (${whereQuery})
+                                     ${orderQuery}
+                                     ${limitQuery}`).get();
+
+        var result = [];
+        foreach(rawResult, (index, row) => {
+            row.index = (i(length)) * i(start) + (i(index) + 1);
+			result.push(row);
+        });
+        
+        res({
+            draw 			: req('draw'),
+			recordsTotal 	: recordsTotal,
+			recordsFiltered : recordsFiltered,
+			data 			: result
+        });
+    });
+});
+
 /* PC Details Update */
 PUT('purchase-contract-details/update/:id', () => {
     var data = param(),

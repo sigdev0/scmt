@@ -216,6 +216,74 @@ DELETE('good-delivery/delete/:id'  , () => {
     });
 });
 
+/*
+ *
+ * Details
+ *
+ */
+
+/* GD Details Datatable */
+GET('good-delivery-details-datatable/:id', () => {
+    var data = param(),
+        rule = {
+            id : ['required', 'exists:good_deliveries']
+        };
+    
+    validate(data, rule, () => {
+        var columnToSelect  = ['good_delivery_details.id', 'package_number', 'serial_number', 'package_count', 'remarks', 'good_delivery_details.created_at', 'good_delivery_details.updated_at', 'products.product_code as product_code', 'products.brand as product_brand', 'products.description as product_description']
+            columnToSearch  = ['package_number', 'serial_number', 'products.product_code', 'products.brand'],
+            keyword         = req('search').value,
+            length          = req('length'),
+            start           = req('start'),
+            orderBy         = i(req('order')[0].column),
+            orderType       = req('order')[0].dir;
+            // keyword         = '',
+            // length          = 10,
+            // start           = 0,
+            // orderBy         = '-',
+            // orderType       = '-';
+
+        var whereQuery  = '',
+            orderQuery  = '',
+            limitQuery  = `LIMIT ${length} OFFSET ${start}`;
+
+        foreach(columnToSearch, (index, each) => {
+            whereQuery += (i(index) === 0 ? '' : ' OR ') + `${each} LIKE '%${keyword}%'`;
+        });
+
+        if(orderBy !== '-' && orderType !== '-'){
+            orderQuery = `ORDER BY ${columnToSelect[orderBy]} ${orderType}`;
+        }
+
+        var recordsTotal    = GDD.instance().count(),
+		
+            recordsFiltered = query(`SELECT COUNT(*) AS total
+                                     FROM dev.good_delivery_details
+                                     JOIN dev.products ON products.id = product_id
+                                     WHERE good_delivery_id = '${data.id}'`).first().total,
+
+            rawResult       = query(`SELECT ${columnToSelect.join(', ')}
+                                     FROM dev.good_delivery_details
+                                     JOIN dev.products ON products.id = product_id
+                                     WHERE good_delivery_id = '${data.id}' AND (${whereQuery})
+                                     ${orderQuery}
+                                     ${limitQuery}`).get();
+
+        var result = [];
+        foreach(rawResult, (index, row) => {
+            row.index = (i(length)) * i(start) + (i(index) + 1);
+			result.push(row);
+        });
+        
+        res({
+            draw 			: req('draw'),
+			recordsTotal 	: recordsTotal,
+			recordsFiltered : recordsFiltered,
+			data 			: result
+        });
+    });
+});
+
 /* GD Details Update */
 PUT('good-delivery-details/update/:id', () => {
     var data = param(),

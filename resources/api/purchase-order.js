@@ -271,6 +271,80 @@ PUT('purchase-order/set-status/:action/:id', () => {
 	});
 });
 
+/*
+ *
+ * Details
+ *
+ */
+
+/* PO Details Datatable */
+GET('purchase-order-details-datatable/:id', () => {
+    var data = param(),
+        rule = {
+            id : ['required', 'exists:purchase_orders']
+        };
+    
+    validate(data, rule, () => {
+        var columnToSelect  = ['purchase_order_details.id', 'quantity', 'quantity_outstanding', 'purchase_order_details.created_at', 'purchase_order_details.updated_at', 'product_code', 'warehouses.location_code', 'business_units.location_code', 'purchase_orders.number']
+            columnToSearch  = ['product_code', 'warehouses.location_code', 'business_units.location_code'],
+            keyword         = req('search').value,
+            length          = req('length'),
+            start           = req('start'),
+            orderBy         = i(req('order')[0].column),
+            orderType       = req('order')[0].dir;
+            // keyword         = '',
+            // length          = 10,
+            // start           = 0,
+            // orderBy         = '-',
+            // orderType       = '-';
+
+        var whereQuery  = '',
+            orderQuery  = '',
+            limitQuery  = `LIMIT ${length} OFFSET ${start}`;
+
+        foreach(columnToSearch, (index, each) => {
+            whereQuery += (i(index) === 0 ? '' : ' OR ') + `${each} LIKE '%${keyword}%'`;
+        });
+
+        if(orderBy !== '-' && orderType !== '-'){
+            orderQuery = `ORDER BY ${columnToSelect[orderBy]} ${orderType}`;
+        }
+
+        var recordsTotal    = POD.instance().count(),
+		
+            recordsFiltered = query(`SELECT COUNT(*) AS total
+                                     FROM dev.purchase_order_details
+                                     JOIN dev.products  					ON products.id  		= product_id
+                                     JOIN dev.locations AS business_units  	ON business_units.id  	= purchase_order_details.business_unit_id
+                                     JOIN dev.locations AS warehouses  		ON warehouses.id  		= purchase_order_details.warehouse_id
+                                     JOIN dev.purchase_orders 				ON purchase_orders.id 	= purchase_order_id
+                                     WHERE purchase_order_id = '${data.id}'`).first().total,
+
+            rawResult       = query(`SELECT ${columnToSelect.join(', ')}
+                                     FROM dev.purchase_order_details
+                                     JOIN dev.products  					ON products.id  		= product_id
+                                     JOIN dev.locations AS business_units  	ON business_units.id  	= purchase_order_details.business_unit_id
+                                     JOIN dev.locations AS warehouses  		ON warehouses.id  		= purchase_order_details.warehouse_id
+                                     JOIN dev.purchase_orders 				ON purchase_orders.id 	= purchase_order_id
+                                     WHERE purchase_order_id = '${data.id}' AND (${whereQuery})
+                                     ${orderQuery}
+                                     ${limitQuery}`).get();
+
+        var result = [];
+        foreach(rawResult, (index, row) => {
+            row.index = (i(length)) * i(start) + (i(index) + 1);
+			result.push(row);
+        });
+        
+        res({
+            draw 			: req('draw'),
+			recordsTotal 	: recordsTotal,
+			recordsFiltered : recordsFiltered,
+			data 			: result
+        });
+    });
+});
+
 /* PO Details Update */
 PUT('purchase-order-details/update/:id', () => {
     var data = param(),
