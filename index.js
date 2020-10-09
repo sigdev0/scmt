@@ -1,7 +1,7 @@
 require('./system/lazify');
 
 GET('/', () => {
-	view('index.twig');
+	redirect('/routes');
 });
 
 serve(false);

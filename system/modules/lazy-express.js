@@ -236,6 +236,10 @@ module.exports = new class LazyExpress {
 			
 					return req.params;
 				}
+
+				global.redirect = (url) => {
+					res.redirect(url);
+				}
 		
 				action(req, res, next);
 				end();

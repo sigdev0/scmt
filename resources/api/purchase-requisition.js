@@ -229,6 +229,37 @@ PUT('purchase-requisition/set-status/:action/:id', () => {
     });
 });
 
+/*
+ *
+ * Details
+ *
+ */
+
+/* PR Details Datatable */
+GET('purchase-requisition-details-datatable/:id', () => {
+    var data = param(),
+        rule = {
+            id : ['required', 'exists:purchase_requisitions']
+        };
+    
+    validate(data, rule, () => {
+        // var keyword     = req('search').value   || '',
+        //     limit       = req('length')         || 10,
+        //     start       = req('start')          || 0,
+        //     orderBy     = i(req('order')[0].column) || 0,
+        //     orderType   = req('order')[0].dir;
+        
+        // this.orderBy(columnToSelect[i(req('order')[0].column)], req('order')[0].dir);
+        var details = query(`select 
+                             from dev.purchase_requisition_details
+                             join dev.products on products.id = product_id
+                             join dev.locations on locations.id = location_id
+                             where purchase_requisition_id = '${data.id}'`).get();
+
+        res(details);
+    });
+});
+
 /* PR Details Update */
 PUT('purchase-requisition-details/update/:id', () => {
     var data = param(),

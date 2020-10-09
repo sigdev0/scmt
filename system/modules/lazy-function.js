@@ -48,7 +48,7 @@ module.exports = new class LazyFunction {
 		var keys = Object.keys(collection);
 
 		for(var i = 0; i < keys.length; i++){
-			callback(parseInt(keys[i]), collection[keys[i]]);
+			callback(isNumeric(keys[i]) ? parseInt(keys[i]) : keys[i], collection[keys[i]]);
 		}
 	}
 
