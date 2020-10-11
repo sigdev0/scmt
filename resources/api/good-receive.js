@@ -285,12 +285,12 @@ GET('good-receive-details-datatable/:id', () => {
 
 /* GR Details Update */
 PUT('good-receive-details/update/:id', () => {
-    var data = param(),
+    var param = param(),
         rule = {
             id : ['required', 'exists:good_receive_details']
         };
     
-    validate(data, rule, () => {
+    validate(param, rule, () => {
         var data = {
             serial_number 		: req('serial_number'),
 			remarks 			: req('remarks'),
@@ -300,7 +300,7 @@ PUT('good-receive-details/update/:id', () => {
 			purchase_order_id 	: req('purchase_order_id'),
         };
 
-        var details = GDD.update(data, {id : data.id});
+        var details = GDD.update(data, {id : param.id});
         if(details){
             res(details) 
         } else {

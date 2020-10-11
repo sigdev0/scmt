@@ -301,12 +301,12 @@ GET('purchase-requisition-details-datatable/:id', () => {
 
 /* PR Details Update */
 PUT('purchase-requisition-details/update/:id', () => {
-    var data = param(),
+    var param = param(),
         rule = {
             id : ['required', 'exists:purchase_requisition_details']
         };
     
-    validate(data, rule, () => {
+    validate(param, rule, () => {
         var data = {
             quantity        : req('quantity'),
             target_date     : req('target_date'),
@@ -315,7 +315,7 @@ PUT('purchase-requisition-details/update/:id', () => {
             location_id     : req('location_id'),
         };
 
-        var details = PRD.update(data, {id : data.id});
+        var details = PRD.update(data, {id : param.id});
         if(details){
             res(details) 
         } else {
