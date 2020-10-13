@@ -5,7 +5,7 @@ class LazyValidator {
     #onError;
     #onSuccess;
     
-    constructor(data = {}, rules = {}, onSuccess = () => {}, onError = (errors) => { typeof res !== 'undefined' && typeof res === 'function' ? res(errors, 422) : console.error(errors) }) {
+    constructor(data = {}, rules = {}, onSuccess = () => {}, onError = (errors) => { typeof res !== 'undefined' && typeof res === 'function' ? end(errors, 422) : console.error(errors) }) {
         // this.alias      = {};
         this.#data      = data;
         this.#rules     = rules;

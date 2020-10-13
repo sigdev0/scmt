@@ -1,7 +1,7 @@
-const PR = PurchaseRequisition,
-    PRD = PurchaseRequisitionDetail,
-    PO = PurchaseOrder,
-    POD = PurchaseOrderDetail;
+const   PR  = PurchaseRequisition,
+        PRD = PurchaseRequisitionDetail,
+        PO  = PurchaseOrder,
+        POD = PurchaseOrderDetail;
 
 /* PR Details */
 GET('purchase-requisition/:id', () => {
@@ -300,12 +300,12 @@ GET('purchase-requisition-details-datatable/:id', () => {
 
 /* PR Details Update */
 PUT('purchase-requisition-details/update/:id', () => {
-    var param = param(),
-        rule = {
+    var condition   = param(),
+        rule        = {
             id : ['required', 'exists:purchase_requisition_details']
         };
     
-    validate(param, rule, () => {
+    validate(condition, rule, () => {
         var data = {
             quantity        : req('quantity'),
             target_date     : req('target_date'),
@@ -314,7 +314,7 @@ PUT('purchase-requisition-details/update/:id', () => {
             location_id     : req('location_id'),
         };
 
-        var details = PRD.update(data, {id : param.id});
+        var details = PRD.update(data, condition);
         if(details){
             res(details) 
         } else {

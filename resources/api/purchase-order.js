@@ -347,12 +347,12 @@ GET('purchase-order-details-datatable/:id', () => {
 
 /* PO Details Update */
 PUT('purchase-order-details/update/:id', () => {
-    var param = param(),
-        rule = {
+    var condition 	= param(),
+        rule 		= {
             id : ['required', 'exists:purchase_order_details']
         };
     
-    validate(param, rule, () => {
+    validate(condition, rule, () => {
         var data = {
             quantity 				: req('quantity'),
 			quantity_outstanding 	: req('quantity_outstanding'),
@@ -363,7 +363,7 @@ PUT('purchase-order-details/update/:id', () => {
 			purchase_order_id 		: req('purchase_order_id'),
         };
 
-        var details = POD.update(data, {id : param.id});
+        var details = POD.update(data, condition);
         if(details){
             res(details) 
         } else {

@@ -12,6 +12,12 @@ if (config('db.active') && global.knex == null) {
 		}
 	});
 
+	global.raw 		= (query, binding) => {
+		// console.log('binding');
+		// console.log(knex.raw(query, binding));
+		return knex.raw(query, binding);
+	}
+
 	if (config('db.logging') && !knexLog) {
 		knex.on('query', (rawQuery) => {
 			var query = rawQuery.sql;
@@ -90,6 +96,10 @@ class LazyDB {
 		});
 
 		return empty(key) ? props : props[key];
+	}
+
+	getQuery(){
+		return this.#knex.toSQL().sql;
 	}
 
 	/* Clear */
@@ -341,7 +351,7 @@ class LazyDB {
 	}
 
 	select              = (...column) => {
-		console.log('in');
+		// console.log('in');
 		if(count(column) === 1 && Array.isArray(column[0])){
 			console.log('array');
 			foreach(column[0], (i, each) => {
@@ -824,9 +834,9 @@ class LazyDB {
 	}
 
 	orWhereLike         = (column, value) => {
-		value = String(value).replace(`"`,``).replace(`'`,``).toLowerCase();
+		// value = String(value).replace(`"`,``).replace(`'`,``).toLowerCase();
 
-		this.#knex.orWhere(knex.raw(`LOWER(${column}) LIKE '%${value}%'`));
+		this.#knex.orWhereRaw(`LOWER(:column:) LIKE :value`, {column : column, value : `%${value}%`});
 		this.#hasCondition = true;
 		return this;
 	}
@@ -892,9 +902,11 @@ class LazyDB {
 	}
 
 	whereLike           = (column, value) => {
-		value = String(value).replace(`"`,``).replace(`'`,``).toLowerCase();
+		// value = String(value).replace(`"`,``).replace(`'`,``).toLowerCase();
 
-		this.#knex.where(knex.raw(`LOWER(${column}) LIKE '%${value}%'`));
+		// this.#knex.where(knex.raw(`LOWER(${column}) LIKE '%${value}%'`));
+		
+		this.#knex.whereRaw(`LOWER(:column:) LIKE :value`, {column : column, value : `%${value}%`});
 		this.#hasCondition = true;
 		return this;
 	}

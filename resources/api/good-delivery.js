@@ -1,3 +1,5 @@
+const { endsWith } = require("voca");
+
 const 	GD 	= GoodDelivery,
 		GDD = GoodDeliveryDetail;
 
@@ -286,12 +288,12 @@ GET('good-delivery-details-datatable/:id', () => {
 
 /* GD Details Update */
 PUT('good-delivery-details/update/:id', () => {
-    var param = param(),
-        rule = {
+    var condition 	= param(),
+        rule 		= {
             id : ['required', 'exists:good_delivery_details']
         };
     
-    validate(param, rule, () => {
+    validate(condition, rule, () => {
         var data = {
             package_number 	: req('package_number'),
 			serial_number 	: req('serial_number'),
@@ -301,7 +303,7 @@ PUT('good-delivery-details/update/:id', () => {
 			product_id 		: req('product_id'),
         };
 
-        var details = GDD.update(data, {id : param.id});
+        var details = GDD.update(data, condition);
         if(details){
             res(details) 
         } else {

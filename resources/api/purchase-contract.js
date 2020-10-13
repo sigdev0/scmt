@@ -267,12 +267,12 @@ GET('purchase-contract-details-datatable/:id', () => {
 
 /* PC Details Update */
 PUT('purchase-contract-details/update/:id', () => {
-    var param = param(),
-        rule = {
+    var condition 	= param(),
+        rule 		= {
             id : ['required', 'exists:purchase_contract_details']
         };
     
-    validate(param, rule, () => {
+    validate(condition, rule, () => {
         var data = {
             quantity                : req('quantity'),
 			price                   : req('price'),
@@ -282,7 +282,7 @@ PUT('purchase-contract-details/update/:id', () => {
 			updated_at              : now(true),
         };
 
-        var details = PCD.update(data, {id : param.id});
+        var details = PCD.update(data, condition);
         if(details){
             res(details) 
         } else {

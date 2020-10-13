@@ -215,8 +215,8 @@ module.exports = new class LazyExpress {
 					res.status(statusCode).send(message);
 				};
 	
-				global.end 		= (param = '') => {
-					res.end(param);
+				global.end 		= (param = '', statusCode = 200) => {
+					res.status(statusCode).end(param);
 				};
 	
 				global.next 	= next;
