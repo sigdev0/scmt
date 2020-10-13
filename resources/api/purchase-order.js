@@ -189,8 +189,8 @@ PUT('purchase-order/update' 	, function(){
 					poDetails.product_id               	= req('details')[i]['product_id'];
 					poDetails.business_unit_id         	= req('details')[i]['business_unit_id'];
 					poDetails.warehouse_id             	= req('details')[i]['warehouse_id'];
-					poDetails.purchase_order_id 	= req('details')[i]['purchase_order_id'];
-					poDetails.purchase_order_id        	= purchaseOrder.id
+					poDetails.purchase_requisition_id 	= req('details')[i]['purchase_requisition_id'];
+					// poDetails.purchase_order_id        	= purchaseOrder.id;
 
 				poDetails.update();
                 // validate(details, {

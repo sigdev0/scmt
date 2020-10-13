@@ -300,7 +300,7 @@ PUT('good-receive-details/update/:id', () => {
 			purchase_order_id 	: req('purchase_order_id'),
         };
 
-        var details = GDD.update(data, condition);
+        var details = GRD.update(data, condition);
         if(details){
             res(details) 
         } else {
