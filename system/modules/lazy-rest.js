@@ -28,9 +28,9 @@ module.exports.rest = new class LazyRest {
         }).catch((error) => {
             wait    = false;
             parsed  = {
-                statusCode  : error.statusCode,
-                code        : error.error.code,
-                message     : error.error.message,
+                // statusCode  : error.statusCode,
+                code    : error.statusCode,
+                body    : error.error,
             };
         });
     

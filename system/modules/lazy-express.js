@@ -4,7 +4,6 @@ module.exports = new class LazyExpress {
 	#app 						= null;
 	#server 					= null;
 	#multer 					= null;
-	#jwt 						= null;
 
 	#request 					= null;
 	#response 					= null;
@@ -62,31 +61,6 @@ module.exports = new class LazyExpress {
 
 			this.#app.use(cors);
 			this.#corsEnabled = true;
-		}
-	}
-
-	#initJWT 				= () => {
-        if(jwt.enabled() || this.#jwtExclusions.length > 0) {
-			if(config('jwt.hash') && config('jwt.expiration')) {
-				this.#jwt = require('express-jwt')({
-					secret 		: config('jwt.hash'),
-					expire 		: config('jwt.expiration'),
-					algorithms 	: ['RS256']
-				}).unless({
-					path : this.#jwtExclusions
-				});
-	
-				this.#app.use(this.#jwt);
-				this.#app.use((error, req, res, next)  => {
-					if(error.status === 401) {
-						if (!empty(error.inner.name) && error.inner.name === 'TokenExpiredError') {
-							res.status(401).send({status : "ERROR", message : "Token expired..."});
-						} else {
-							res.status(401).send({status : "ERROR", message : "No authorization token was found..."});
-						}
-					}
-				});
-			}
 		}
 	}
 
@@ -248,10 +222,13 @@ module.exports = new class LazyExpress {
 
 	#assignRoutes 			= () => {
 		if(count(this.#routeList) > 0){
-			var middlewares = [this.#multer.any()];
-
-			if(jwt.enabled()) middlewares.push(this.#jwt);
 			foreach(this.#routeList, (i, each) => {
+				var middlewares = [this.#multer.any()];
+
+				if(!isIn(each.url, this.#jwtExclusions)) {
+					middlewares.push(jwt.middleware());
+				};
+				
 				this.#routeLog.push({
 					method 	: upper(each.method),
 					url 	: each.url,
@@ -349,10 +326,10 @@ module.exports = new class LazyExpress {
 		this.#initStorageRoutes();
 		this.#initStorageDownloader();
 
-		/* Handle CORS, JWT and Protocol */
+		/* Handle CORS, Protocol */
 		this.#initCORS();
 		this.#initProtocol();
-		this.#initJWT();
+		// this.#initJWT();
 
 		/* Auto Register Routes & Assign Routes */
 		this.#autoRegisterRoutes(spath('api_dir'));
@@ -360,6 +337,17 @@ module.exports = new class LazyExpress {
 
 		/* Assign View */
 		this.#assignView();
+
+		/* JWT Error Handling */
+		this.#app.use((error, req, res, next)  => {
+			if(error.status === 401) {
+				if (!empty(error.inner.name) && error.inner.name === 'TokenExpiredError') {
+					res.status(401).send({status : "ERROR", message : "Token expired..."});
+				} else {
+					res.status(401).send({status : "ERROR", message : "No authorization token was found..."});
+				}
+			}
+		});
 
 		/* Server Listener */
 		this.#server.listen(config('server.port'), () => {
@@ -399,6 +387,7 @@ module.exports = new class LazyExpress {
 			console.log(`.${spacer(log.length - 1)}  .`);
 			console.log(`..${spacer(log.length - 2)} ..`);
 			console.log(`...${spacer(log.length - 3)}...`);
+
 			// console.log(``);
 			// console.log(`[${this.#httpsEnabled ? 'x' : ' '}] HTTPS enabled`);
 			// console.log(`[${this.#corsEnabled ? 'x' : ' '}] CORS enabled`);

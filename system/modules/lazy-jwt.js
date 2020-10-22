@@ -1,5 +1,6 @@
 module.exports.jwt = new class LazyJWT {
-	#jwt 		= require('jsonwebtoken');
+	#jwt 		= require('express-jwt');
+	#token 		= require('jsonwebtoken');
 	#hash 		= '';
 	#enabled 	= '';
 	#expiration = '';
@@ -45,7 +46,7 @@ module.exports.jwt = new class LazyJWT {
 			console.error(`--- ERROR: JWT configuration not set! ---`);
 			return token;
 		}
-		return this.#jwt.decode(token);
+		return this.#token.decode(token);
 	}
 
 	encode  	= (object) => {
@@ -53,6 +54,14 @@ module.exports.jwt = new class LazyJWT {
 			console.error(`--- ERROR: JWT configuration not set! ---`);
 			return object;
 		}
-		return this.#jwt.sign(object, config('jwt.hash'), {expiresIn: config('jwt.expiration')});
+		return this.#token.sign(object, config('jwt.hash'), {expiresIn: config('jwt.expiration')});
+	}
+
+	middleware	= () => {
+		return this.#jwt({
+			secret 		: this.#hash,
+			expire 		: this.#expiration,
+			algorithms 	: ['RS256']
+		});
 	}
 };
