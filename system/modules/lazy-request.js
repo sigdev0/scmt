@@ -63,8 +63,8 @@ module.exports = class LazyRequest {
     }
 
     hasFile     = (paramKey) => {
+        var found = false;
         if(this.#isMultipart){
-            var found = false;
             foreach(this.#request, (key, value) => {
                 if(paramKey === key && value.constructor.name === 'LazyRequestFile') found = true;
             });

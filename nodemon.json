@@ -1,4 +1,4 @@
 {
-	"watch": ["index.js", "routes/", "app/", "resources/", "system/"],
+	"watch": ["index.js", "config/", "routes/", "app/", "resources/", "system/"],
 	"ext": "js, css, twig"
   }

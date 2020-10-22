@@ -33,6 +33,8 @@ if (config('db.active') && global.knex == null) {
 	}
 }
 
+global.primaries = {};
+
 class LazyDB {
 
 	#attributes 	= {};
@@ -998,10 +1000,10 @@ module.exports.query 	= (...param) => {
 	}
 };
 
-module.exports.db 		= (table) => {
+module.exports.db 		= (table, primaryColumn) => {
 	var instance = new LazyDB({
 		table 			: table,
-		primaryColumn 	: primaries[table]
+		primaryColumn 	: primaries[table] || primaryColumn
 	});
 	return instance._init();
 };

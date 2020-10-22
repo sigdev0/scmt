@@ -11,7 +11,6 @@ module.exports = new class LazyExpress {
 	#next 						= null;
 
 	#corsEnabled 				= false;
-	#jwtEnabled 				= false;
 	#httpsEnabled 				= false;
 
 	#jwtExclusions				= [/files\/*/];
@@ -66,12 +65,13 @@ module.exports = new class LazyExpress {
 		}
 	}
 
-	#initJWT 				= (withJWT) => {
-        if(withJWT) {
+	#initJWT 				= () => {
+        if(jwt.enabled() || this.#jwtExclusions.length > 0) {
 			if(config('jwt.hash') && config('jwt.expiration')) {
 				this.#jwt = require('express-jwt')({
-					secret : config('jwt.hash'),
-					expire : config('jwt.expiration')
+					secret 		: config('jwt.hash'),
+					expire 		: config('jwt.expiration'),
+					algorithms 	: ['RS256']
 				}).unless({
 					path : this.#jwtExclusions
 				});
@@ -86,8 +86,6 @@ module.exports = new class LazyExpress {
 						}
 					}
 				});
-				
-				this.#jwtEnabled = true;
 			}
 		}
 	}
@@ -177,7 +175,7 @@ module.exports = new class LazyExpress {
 		});
 	}
 
-	#assignREST 			= (method, url, action, withJWT = true) => {
+	#assignREST 			= (method, url, action, withJWT = jwt.enabled()) => {
 		if(startsWith(url, '/')) url = cutl(url, 1);
 		url = `/${url}`;
 
@@ -212,7 +210,7 @@ module.exports = new class LazyExpress {
 				};
 
 				global.res 		= global.response 	= (message, statusCode = 200) => {
-					res.status(statusCode).send(message);
+					if(!res.headersSent) res.status(statusCode).send(message);
 				};
 	
 				global.end 		= (param = '', statusCode = 200) => {
@@ -244,18 +242,20 @@ module.exports = new class LazyExpress {
 				action(req, res, next);
 				end();
 			},
+			jwt 	: withJWT
 		});
 	}
 
-	#assignRoutes 			= (withJWT) => {
+	#assignRoutes 			= () => {
 		if(count(this.#routeList) > 0){
 			var middlewares = [this.#multer.any()];
 
-			if(withJWT) middlewares.push(this.#jwt);
+			if(jwt.enabled()) middlewares.push(this.#jwt);
 			foreach(this.#routeList, (i, each) => {
 				this.#routeLog.push({
 					method 	: upper(each.method),
-					url 	: each.url
+					url 	: each.url,
+					jwt		: each.jwt
 				});
 				this.#app[each.method](each.url, middlewares, each.action);
 			})
@@ -314,35 +314,26 @@ module.exports = new class LazyExpress {
 		return key ? request.headers[key] : request.headers;
 	};
 
-	serve 					= (withJWT = true) => {
-		/* Handle Storage Routes & Downloader */
-		this.#initStorageRoutes();
-		this.#initStorageDownloader();
-
-		/* Handle CORS, JWT and Protocol */
-		this.#initCORS();
-		this.#initProtocol();
-		this.#initJWT(withJWT);
-
-		/* Auto Register Routes & Assign Routes */
-		this.#autoRegisterRoutes(spath('api_dir'));
-		this.#assignRoutes(withJWT);
+	serve 					= () => {
 
 		/* Add Endpoint to Display Routes */
-		this.#routeLog.push({
-			method 	: 'GET',
-			url		: '/routes'
-		});
-
 		var tempRoute = this.#routeLog;
-		this.#app['get']('/routes', function(req, res){
-			var routes 	=`<table align='center' border='1' cellspacing='0' cellpadding='4'><thead><tr><th align='center' style='font-weight:bold'>Method</th><th>URL</th></tr></thead><tbody>`,
+		this.#assignREST('get', 'routes', function(req, res){
+			var routes 	=`<table align='center' border='1' cellspacing='0' cellpadding='4'><thead><tr><th align='center' style='font-weight:bold'>Method</th><th>URL</th><th>JWT</th></tr></thead><tbody>`,
 				last 	='%';
 
 			foreach(tempRoute, (i, each) => {
-				if((!contains(split(each.url, '/')[1], last) && !contains(last, split(each.url, '/')[1])) || last === '') routes += `<tr><td colspan='2' style='background:darkgrey;'></td></tr>`;
+				if((!contains(split(each.url, '/')[1], last) && !contains(last, split(each.url, '/')[1])) || last === '') routes += `<tr><td colspan='3' style='background:darkgrey;'></td></tr>`;
 
-				routes += `<tr><td>${each.method}</td><td>${each.url}</td></tr>`;
+				var color 	= 'green', 
+					_jwt 	= jwt.enabled();
+
+				if((each.jwt !== _jwt && _jwt) || (each.jwt === _jwt && !_jwt)){
+					color = 'orange';
+				}
+
+				routes += `<tr><td>${each.method}</td><td>${each.url}</td><td style="background:${color};"></td></tr>`;
+
 				
 				last = split(each.url, '/')[1];
 			});
@@ -351,16 +342,28 @@ module.exports = new class LazyExpress {
 
 			res.send(routes);
 
-		});
+		}, false);
 
-		
+
+		/* Handle Storage Routes & Downloader */
+		this.#initStorageRoutes();
+		this.#initStorageDownloader();
+
+		/* Handle CORS, JWT and Protocol */
+		this.#initCORS();
+		this.#initProtocol();
+		this.#initJWT();
+
+		/* Auto Register Routes & Assign Routes */
+		this.#autoRegisterRoutes(spath('api_dir'));
+		this.#assignRoutes();
 
 		/* Assign View */
 		this.#assignView();
 
 		/* Server Listener */
 		this.#server.listen(config('server.port'), () => {
-			var last = '%';
+			var last 		= '%';
 
 			console.log(`-----------------------`);
 			console.log(` >     ROUTE LIST    < `);
@@ -368,21 +371,39 @@ module.exports = new class LazyExpress {
 			foreach(this.#routeLog, (i, each) => {
 				if((!contains(split(each.url, '/')[1], last) && !contains(last, split(each.url, '/')[1])) || last === '') console.log('');
 
-				console.log(`${each.method}\t: ${each.url}`);
+				console.log(`${each.method}\t: ${each.url} ${jwt.enabled() === each.jwt ? '' : (jwt.enabled() ? '[no JWT]' : '[with JWT]')}`);
 				
 				last = split(each.url, '/')[1];
 			});
 			console.log('', '');
 
-			console.log(`-----------------------`);
-			console.log(` >   SERVER STARTED   <`);
-			console.log(`-----------------------`);
-			console.log(`\`${config('server.name')} ${config('server.version')}\` running at port \`${config('server.port')}\``);
-			console.log(``);
-			console.log(`[${this.#httpsEnabled ? 'x' : ' '}] HTTPS enabled`);
-			console.log(`[${this.#corsEnabled ? 'x' : ' '}] CORS enabled`);
-			console.log(`[${this.#jwtEnabled ? 'x' :  ' '}] JWT enabled`);
-			console.log(``, ``);
+			// console.log(`-----------------------`);
+			// console.log(` >   SERVER STARTED   <`);
+			// console.log(`-----------------------`);
+			var log 	= `   \`${config('server.name')} ${config('server.version')}\` running at port \`${config('server.port')}\``, 
+				spacer	= (length) => {
+					var spaces = '';
+					for(var i = 0; i < length ; i++){
+						spaces += ' ';
+					}
+					return spaces;
+				};
+
+			console.log(`...${spacer(log.length - 3)}...`);
+			console.log(`..${spacer(log.length - 2)} ..`);
+			console.log(`.${spacer(log.length - 1)}  .`);
+			console.log(log);
+			console.log(`   [${this.#corsEnabled ? 'x' : ' '}] with CORS`)
+			console.log(`   [${jwt.enabled() ? 'x' : ' '}] with JWT (global)`)
+			console.log(`   [${Telegram.enabled() ? 'x' : ' '}] with Telegram BOT`)
+			console.log(`.${spacer(log.length - 1)}  .`);
+			console.log(`..${spacer(log.length - 2)} ..`);
+			console.log(`...${spacer(log.length - 3)}...`);
+			// console.log(``);
+			// console.log(`[${this.#httpsEnabled ? 'x' : ' '}] HTTPS enabled`);
+			// console.log(`[${this.#corsEnabled ? 'x' : ' '}] CORS enabled`);
+			// console.log(`[${jwt.enabled() ? 'x' :  ' '}] JWT enabled`);
+			// console.log(``, ``);
 
 			if(count(this.#errors) > 0){
 				console.log(`----------------`);

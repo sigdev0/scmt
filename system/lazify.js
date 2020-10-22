@@ -10,9 +10,11 @@ module.exports = new class Lazify {
 		this.#assign('./modules/lazy-file');
 		this.#assign('./modules/lazy-storage');
 		this.#assign('./modules/lazy-rest');
-		this.#assign('./modules/lazy-jwt');
 		this.#assign('./modules/lazy-db');
+		this.#assign('./modules/lazy-jwt');
 		this.#assign('./modules/lazy-validator');
+		this.#assign('./modules/lazy-telegram');
+		this.#assign('./modules/lazy-hash');
 
 		/* Server Level */
 		this.#assign('./modules/lazy-express');
