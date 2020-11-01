@@ -134,6 +134,10 @@ module.exports = new class LazyFunction {
 		return this.#md5(param);
 	}
 
+	moment 		= () => {
+		return this.#moment().tz('Asia/Jakarta');
+	}
+
 	now 		= (withTime = false) => {
 		return this.#moment().tz('Asia/Jakarta').format(`YYYY-MM-DD${withTime ? ' HH:mm:ss' : ''}`);
 	}

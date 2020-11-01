@@ -105,9 +105,9 @@ GET('good-delivery-datatable', () => {
 
 /* GD Insert */
 POST('good-delivery/insert', () => {
-	var data = req('number', 'remarks', 'status', 'package_count', 'created_by', 'business_unit_id', 'supplier_id', 'warehouse_id', 'purchase_order_id'),
+	var data = req('remarks', 'status', 'package_count', 'created_by', 'business_unit_id', 'supplier_id', 'warehouse_id', 'purchase_order_id'),
 		rule = {
-			number 				: ['required', 'unique:good_deliveries'],
+			// number 				: ['required', 'unique:good_deliveries'],
 			remarks 			: ['required'],
 			status 				: ['required'],
 			package_count 		: ['required', 'numeric'],
@@ -120,6 +120,7 @@ POST('good-delivery/insert', () => {
 	
 	validate(data, rule, () => {
 		data.id 		= GD.max('id') + 1;
+		data.number     = `GD-${moment().format('YYYYMMDD-HHmmss')}-${data.created_by}`;
 		data.created_at = now(true);
 		data.updated_at = now(true);
 

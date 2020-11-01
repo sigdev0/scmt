@@ -11,7 +11,7 @@ GET('purchase-order/:id' 		, () => {
 	validate(data, rule, () => {
 		var result = PO.instance();
   
-		result 	.select('purchase_orders.id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 
+		result 	.select('purchase_orders.id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 'sap_reference' ,
 						'processed_date', 'approved_date', 'cancelled_date', 'purchase_orders.created_at', 'purchase_orders.updated_at', 
 						'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 
 						'creators.username as created_by', 'updaters.username as updated_by', 'location_id', 'purchase_contract_id', 'supplier_id')
@@ -43,7 +43,7 @@ GET('purchase-order/:id' 		, () => {
 GET('purchase-order'    		, () => {
     var result = PO.instance();
 
-    result 	.select('purchase_orders.id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 
+    result 	.select('purchase_orders.id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 'sap_reference',
 					'processed_date', 'approved_date', 'cancelled_date', 'purchase_orders.created_at', 'purchase_orders.updated_at', 
 					'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 
 					'creators.username as created_by', 'updaters.username as updated_by', 'location_id', 'purchase_contract_id', 'supplier_id')
@@ -84,7 +84,7 @@ GET('purchase-order'    		, () => {
 /* PO List Datatable */
 GET('purchase-order-datatable', () => {
     var instance 		= PO.instance(),
-        columnToSelect 	= [ 'purchase_orders.id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 
+        columnToSelect 	= [ 'purchase_orders.id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 'sap_reference',
 							'processed_date', 'approved_date', 'cancelled_date', 'purchase_orders.created_at', 'purchase_orders.updated_at', 
 							'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 
 							'creators.username as created_by', 'updaters.username as updated_by', 'location_id', 'purchase_contract_id', 'supplier_id'],
@@ -101,10 +101,10 @@ GET('purchase-order-datatable', () => {
 
 /* PO Insert */
 POST('purchase-order/insert' 	, function(){
-	var data = req( 'number', 'reference', 'status', 'currency', 'term_of_payment', 
+	var data = req( 'reference', 'status', 'currency', 'term_of_payment', 'sap_reference',
 					'location_id', 'purchase_contract_id', 'supplier_id', 'created_by'),
 		rule = {
-			number                  : ['required' , 'unique:purchase_orders'],
+			// number                  : ['required' , 'unique:purchase_orders'],
 			reference               : ['required'],
 			status                  : ['required'],
 			currency                : ['required'],
@@ -117,6 +117,7 @@ POST('purchase-order/insert' 	, function(){
 
     validate(data, rule, () => {
 		data.id 		= PO.max('id') + 1;
+		data.number     = `PO-${moment().format('YYYYMMDD-HHmmss')}-${data.created_by}`;
 		data.created_at = now();
 		data.updated_at = now();
 
@@ -156,7 +157,7 @@ POST('purchase-order/insert' 	, function(){
 
 /* PO Update */
 PUT('purchase-order/update' 	, function(){
-	var data = req('id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 'updated_by', 'location_id', 'purchase_contract_id', 'supplier_id'),
+	var data = req('id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 'sap_reference', 'updated_by', 'location_id', 'purchase_contract_id', 'supplier_id'),
 		rule = {
 			number                  : ['required' , 'unique:purchase_orders,number,' + data.id],
 			reference               : ['required'],

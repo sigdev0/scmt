@@ -104,9 +104,9 @@ GET('good-receive-datatable', () => {
 
 /* GR Insert */
 POST('good-receive/insert', () => {
-	var data = req('number', 'remarks', 'status', 'created_by', 'business_unit_id', 'supplier_id', 'warehouse_id'),
+	var data = req('remarks', 'status', 'created_by', 'business_unit_id', 'supplier_id', 'warehouse_id'),
 		rule = {
-			number 				: ['required', 'unique:good_receives'],
+			// number 				: ['required', 'unique:good_receives'],
 			remarks 			: ['required'],
 			status 				: ['required'],
 			created_by 			: ['required', 'exists:users,id'],
@@ -117,6 +117,7 @@ POST('good-receive/insert', () => {
 	
 	validate(data, rule, () => {
 		data.id 		= GR.max('id') + 1;
+		data.number     = `GR-${moment().format('YYYYMMDD-HHmmss')}-${data.created_by}`;
 		data.created_at = now(true);
 		data.updated_at = now(true);
 

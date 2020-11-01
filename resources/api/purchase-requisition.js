@@ -86,9 +86,9 @@ GET('purchase-requisition-datatable', () => {
 
 /* PR Insert */
 POST('purchase-requisition/insert', () => {
-    var data = req('number', 'remarks', 'status', 'created_by', 'status', 'business_unit_id'),
+    var data = req('remarks', 'status', 'created_by', 'status', 'business_unit_id'),
         rule = {
-            number      : ['required', 'unique:purchase_requisitions'],
+            // number      : ['required', 'unique:purchase_requisitions'],
             status      : ['required', 'in:active,pending,cancel'],
             created_by  : ['required', 'exists:users,id']
         };
@@ -98,6 +98,7 @@ POST('purchase-requisition/insert', () => {
         // data.status = req('status');
         // data.photo = req().file('photo').save('photos/');
 
+        data.number     = `PR-${moment().format('YYYYMMDD-HHmmss')}-${data.created_by}`;
         data.created_at = now(true);
         data.updated_at = now(true);
 

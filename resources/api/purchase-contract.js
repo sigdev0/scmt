@@ -84,9 +84,9 @@ GET('purchase-contract-datatable', () => {
 
 /* PC Insert */
 POST('purchase-contract/insert' 	, () => {
-	var data = req('number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'created_by', 'supplier_id'),
+	var data = req('reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'created_by', 'supplier_id'),
 		rule = {
-			number          : ['required' , 'unique:purchase_contracts'],
+			// number          : ['required' , 'unique:purchase_contracts'],
 			reference       : ['required'],
 			contract_type   : ['required' , 'in:normal,special'],
 			status          : ['required'],
@@ -100,6 +100,7 @@ POST('purchase-contract/insert' 	, () => {
 	// console.log(data);
     validate(data, rule, () => {
 		data.id 		= PC.max('id') + 1;
+		data.number     = `PC-${moment().format('YYYYMMDD-HHmmss')}-${data.created_by}`;
         data.created_at = now(true);
 		data.updated_at = now(true);
 
