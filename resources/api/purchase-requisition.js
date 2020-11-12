@@ -71,7 +71,7 @@ GET('purchase-requisition', () => {
 /* PR List Datatable */
 GET('purchase-requisition-datatable', () => {
     var instance = PR.instance(),
-        columnToSelect = ['purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'locations.code as business_unit', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by'],
+        columnToSelect = ['purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'locations.location_code as business_unit', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by'],
         columnToSearch = ['purchase_requisitions.number', 'purchase_requisitions.remarks'];
 
     instance.leftJoin('locations', 'locations.id', 'business_unit_id')
