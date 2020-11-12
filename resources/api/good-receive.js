@@ -108,7 +108,7 @@ POST('good-receive/insert', () => {
 		rule = {
 			// number 				: ['required', 'unique:good_receives'],
 			remarks 			: ['required'],
-			status 				: ['required'],
+			status 				: ['required', 'in:cancel,draft,submitted,approved,rejected'],
 			created_by 			: ['required', 'exists:users,id'],
 			business_unit_id 	: ['required', 'exists:locations,id'],
 			warehouse_id 		: ['required', 'exists:locations,id'],
@@ -155,7 +155,7 @@ PUT('good-receive/update', () => {
 		rule = {
 			number 				: ['required', 'unique:good_receives,number,' + data.id],
 			remarks 			: ['required'],
-			status 				: ['required'],
+			status 				: ['required', 'in:cancel,draft,submitted,approved,rejected'],
 			updated_by 			: ['required', 'exists:users,id'],
 			business_unit_id 	: ['required', 'exists:locations,id'],
 			warehouse_id 		: ['required', 'exists:locations,id'],

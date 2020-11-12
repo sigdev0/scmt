@@ -108,8 +108,8 @@ POST('good-delivery/insert', () => {
 	var data = req('remarks', 'status', 'package_count', 'created_by', 'business_unit_id', 'supplier_id', 'warehouse_id', 'purchase_order_id'),
 		rule = {
 			// number 				: ['required', 'unique:good_deliveries'],
-			remarks 			: ['required'],
-			status 				: ['required'],
+			remarks 		 	: ['required'],
+			status 				: ['required', 'in:cancel,draft,submitted,approved,rejected'],
 			package_count 		: ['required', 'numeric'],
 			created_by 			: ['required', 'exists:users,id'],
 			business_unit_id 	: ['required', 'exists:locations,id'],
@@ -158,7 +158,7 @@ PUT('good-delivery/update', () => {
 		rule = {
 			number 				: ['required', 'unique:good_deliveries,number,' + data.id],
 			remarks 			: ['required'],
-			status 				: ['required'],
+			status 				: ['required', 'in:cancel,draft,submitted,approved,rejected'],
 			package_count 		: ['required', 'numeric'],
 			updated_by 			: ['required', 'exists:users,id'],
 			business_unit_id 	: ['required', 'exists:locations,id'],

@@ -11,7 +11,7 @@ GET('purchase-requisition/:id', () => {
         };
 
     validate(data, rule, () => {
-        var pr = PR.select('purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'locations.location_code as business_unit', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by')
+        var pr = PR.select('purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'locations.location_id as business_unit_id', 'locations.location_code as business_unit', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by')
             .leftJoin('locations', 'locations.id', 'business_unit_id')
             .leftJoin('users as processors', 'processors.id', 'purchase_requisitions.processed_by')
             .leftJoin('users as approvers', 'approvers.id', 'purchase_requisitions.approved_by')
@@ -89,7 +89,7 @@ POST('purchase-requisition/insert', () => {
     var data = req('remarks', 'status', 'created_by', 'status', 'business_unit_id'),
         rule = {
             // number      : ['required', 'unique:purchase_requisitions'],
-            status      : ['required', 'in:active,pending,cancel'],
+            status      : ['required', 'in:cancel,draft,submitted,approved,rejected'],
             created_by  : ['required', 'exists:users,id']
         };
 
@@ -133,7 +133,8 @@ PUT('purchase-requisition/update', () => {
         rule = {
             id          : ['required', 'exists:purchase_requisitions'],
             number      : ['required', 'unqiue:purchase_requisitions,number,id,' + data.number],
-            updated_by  : ['required', 'exists:users,id']
+            updated_by  : ['required', 'exists:users,id'],
+            status      : ['required', 'in:cancel,draft,submitted,approved,rejected'],
         };
 
     validate(data, rule, () => {
