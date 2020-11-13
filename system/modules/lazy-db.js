@@ -432,7 +432,7 @@ class LazyDB {
 		// }
 	}
 
-	datatable 			= (columnToSelect, columnToSearch) => {
+	datatable 			= (columnToSelect, columnToSearch, mainCondition = {}) => {
 		this.select(columnToSelect);
 
 		var keyword 	= req('search.value') 						|| '',
@@ -449,13 +449,15 @@ class LazyDB {
 		// 	orderDir 	: orderDir
 		// });
 
+		if(mainCondition){
+			this.where(mainCondition);
+		}
+
 		if(!empty(keyword)) {
-			foreach(columnToSearch, (index, each) => {
-				if(i(index) == 0){
-					this.whereLike(each, keyword);
-				} else {
-					this.orWhereLike(each, keyword);
-				}
+			this.#knex.andWhere((q) => {
+				foreach(columnToSearch, (index, each) => {
+					q.orWhere(each, 'ilike', `%${keyword}%`);
+				});
 			});
 		}
 
@@ -606,19 +608,72 @@ class LazyDB {
 		}
 
 		return message;
-			// return {
-			// 	success : !startsWith(message, 'ERROR'),
-			// 	body    : message
-			// };
-		// } else {
-		// 	onError(this.#error);
+	}
 
-		// 	return {
-		// 		success : false,
-		// 		body    : this.#error
-		// 	};
-		// }
-		
+	gets ({success = null, error = null, async = false, columnToSelect = [], columnToSearch = [], mainCondition = {}, additionalCondition = {}} = {}) {
+		var message     = null,
+			onSuccess   = typeof success 	=== 'function' ? success : (result)  => {},
+			onError     = typeof error 		=== 'function' ? error : (message) => { typeof res !== 'undefined' && typeof res === 'function' ? res(message, 500) : console.error(message) };
+
+		// if (this.#processable) {
+
+		if(columnToSelect) this.select(columnToSelect);
+
+		if(req('start')) 							this.offset(req('start'));
+		if(req('length')) 							this.limit(req('length'));
+		if(req('order-by') && req('order-type')) 	this.orderBy(req('order-by'), req('order-type'));
+
+		if(mainCondition){
+			this.where(mainCondition);
+		}
+
+		if(additionalCondition){
+			this.#knex.andWhere((q) => {
+				foreach(additionalCondition, (key, value) => {
+					q.orWhere(key, value);
+				});
+			});
+		}
+
+		if(columnToSearch && req('search')){
+			this.#knex.andWhere((q) => {
+				foreach(columnToSearch, (index, column) => {
+					q.orWhere(column, 'ilike', `%${req('search')}%`);
+				});
+			});
+		}
+
+		this.#knex.then((result) => {
+			message  = result;
+			if(async) onSuccess(message);
+		}).catch((error) => {
+			message = false;
+			onError(`${String(error).toLowerCase().replace('error: ', 'ERROR [db.get]: ')}`);
+		});
+
+		if(!async){
+			sync(() => message === null); 
+		}
+
+		this._init();
+
+		if(message){
+			var entities = [];
+			foreach(message, (i, each) => {
+				var entity = new LazyDB(this._attr());
+				foreach(each, (key, value) => {
+					entity[key] = value;
+				});
+				
+				entity._init();
+				entities.push(entity);
+			});      
+
+			message = entities;
+			if(!async) onSuccess(message);
+		}
+
+		return message;
 	}
 
 	max                 = (...param) => {
