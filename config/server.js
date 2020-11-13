@@ -15,6 +15,10 @@
  * | jwt_enabled		| true				|
  * | telegram_enabled	| true				|
  * | telegram_token		| sometelegramtoken	|
+ * | mailer_host		| somemailhost		|
+ * | mailer_port		| somemailport		|
+ * | mailer_username	| somemailusername	|
+ * | mailer_password	| somemailpassword	|
  * '----------------'-----------------------'
  */
 
@@ -22,23 +26,33 @@ module.exports = {
 	/* JWT */
     jwt 		: {
 		enabled		: false,
-        hash 		: "0n41y7jHoUr1yyKooFrGIGD1yU1rfkl5chpw9MfNu5lN14cKOyGDzo7QzpQvXY9c",
-		expiration  : "1h", //1h, 30m,
-		source		: "config", //config, database (using database section below)
+		source		: "database", //config, database (using database section below)
+        hash 		: "",
+		expiration  : "", //1h, 30m,
 	},
 
 	/* Telegram BOT */
 	telegram 	: {
 		enabled 	: false,
+		source 		: "database", //config, database (using database section below)
 		token 		: "",
-		source 		: "config", //config, database (using database section below)
-		token_field	: 'telegram_token', //for testing purpose (default is `telegram_token`), 
+		token_field	: "", //for testing purpose (default is `telegram_token`), 
 					  //fill with different field so there will no conflicting instance of Telegram Bot
+	},
+
+	/* Mailer */
+	mailer 		: {
+		enabled 	: false,
+		source 		: "database",  //config, database (using database section below)
+		host 		: "",
+		port 		: "",
+		username 	: "",
+		password 	: ""
 	},
 	
 	/* Server */
 	server 		: {
-		name 		: 'Lazify',
+		name 		: 'SCMT Api - Procurement',
 		version		: '1.0',
 		cors 		: true,
 		https 		: false,

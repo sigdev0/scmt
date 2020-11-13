@@ -7,19 +7,18 @@ module.exports.jwt = new class LazyJWT {
 	#source 	= '';
 
 	constructor(){
-		this.#source 		= config('jwt.source');
-		this.#hash 			= config('jwt.hash');
 		this.#enabled		= config('jwt.enabled');
-		this.#expiration	= config('jwt.expiration');
+		this.#source 		= config('jwt.source');
+		
 
-		if(this.#source === 'database'){
-			this.#hash 			= db('config').where('name', 'jwt_hash').first();
-			this.#enabled 		= db('config').where('name', 'jwt_enabled').first();
-			this.#expiration 	= db('config').where('name', 'jwt_expiration').first();
-
-			if(this.#hash) 			this.#hash 			= this.#hash.props('value');
-			if(this.#enabled) 		this.#enabled 		= this.#enabled.props('value') === 'true';
-			if(this.#expiration) 	this.#expiration 	= this.#expiration.props('value');
+		if(this.#enabled){
+			if(this.#source === 'config'){
+				this.#hash 			= config('jwt.hash');
+				this.#expiration 	= config('jwt.expiration');
+			} else {
+				this.#hash 			= db('config').where('name', 'jwt_hash').first().props('value');
+				this.#expiration 	= db('config').where('name', 'jwt_expiration').first().props('value');
+			}
 		}
 	}
 

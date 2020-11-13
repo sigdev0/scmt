@@ -355,7 +355,6 @@ class LazyDB {
 	select              = (...column) => {
 		// console.log('in');
 		if(count(column) === 1 && Array.isArray(column[0])){
-			console.log('array');
 			foreach(column[0], (i, each) => {
 				this.#knex.column(each);
 			});
@@ -436,7 +435,20 @@ class LazyDB {
 	datatable 			= (columnToSelect, columnToSearch) => {
 		this.select(columnToSelect);
 
-		var keyword = req('search').value;
+		var keyword 	= req('search.value') 						|| '',
+			length 		= req('length') 							|| 10,
+			start 		= req('start') 								|| 0,
+			orderBy 	= columnToSelect[i(req('order.0.column') 	|| '0')],
+			orderDir 	= req('order.0.dir') 						|| 'asc';
+
+		// console.log({
+		// 	keyword 	: keyword,
+		// 	start 		: start,
+		// 	length 		: length,
+		// 	orderBy 	: orderBy,
+		// 	orderDir 	: orderDir
+		// });
+
 		if(!empty(keyword)) {
 			foreach(columnToSearch, (index, each) => {
 				if(i(index) == 0){
@@ -447,9 +459,9 @@ class LazyDB {
 			});
 		}
 
-		this.limit(req('length'));
-		this.offset(req('start'));
-		this.orderBy(columnToSelect[i(req('order')[0].column)], req('order')[0].dir)
+		this.limit(length);
+		this.offset(start);
+		this.orderBy(orderBy, orderDir)
 
 
 		var recordsTotal 	= this.instance().count(),
@@ -457,12 +469,12 @@ class LazyDB {
 			data 			= [];
 
 		foreach(this.get(), (index, row) => {
-			row.index = (i(req('length')) * i(req('start'))) + (i(index) + 1);
+			row.index = (i(req('length') || '0') * i(req('start') || '0')) + (i(index) + 1);
 			data.push(row.props());
 		});
 
 		return {
-			draw 			: req('draw'),
+			draw 			: req('draw') || 0,
 			recordsTotal 	: recordsTotal,
 			recordsFiltered : recordsFiltered,
 			data 			: data

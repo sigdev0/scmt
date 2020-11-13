@@ -1,23 +1,24 @@
 process.env.NTBA_FIX_319 = 1;
 module.exports.Telegram = new class LazyTelegram {
-	#TelegramBot 	= require('node-telegram-bot-api');
+	#telegramBot 	= null;
 	#enabled 		= false;
 	#token 			= '';
 	#bot 			= null;
 
 	constructor(){
 		this.#enabled 	= config('telegram.enabled');
-		this.#token 	= config('telegram.token');
 
-		if(config('telegram.source') === 'database'){
-			this.#enabled 	= db('config').where('name', 'telegram_enabled').first();
-			this.#token 	= db('config').where('name', config('telegram.token_field')).first();
+		if(this.#enabled){
 
-			if(this.#enabled) 	this.#enabled = this.#enabled.props('value') === 'true';
-			if(this.#token) 	this.#token = this.#token.props('value');
+			if(config('telegram.source') === 'config'){
+				this.#token = config('telegram.token');
+			} else {
+				this.#token = db('config').where('name', config('telegram.token_field')).first().props('value');
+			}
+
+			this.#telegramBot 	= require('node-telegram-bot-api');
+			this.#bot 			= new this.#telegramBot(this.#token, {polling: true})
 		}
-
-		if(this.#enabled) this.#bot = new this.#TelegramBot(this.#token, {polling: true})
 	}
 
 	debug		= () => {
@@ -39,7 +40,7 @@ module.exports.Telegram = new class LazyTelegram {
 
 	sendMessage	= (recipientId, message) => {
 		if(this.#enabled) {
-			this.#bot.sendMessage(recipientId, message);
+			this.#bot.sendMessage(recipientId, message, {parse_mode : 'markdown'});
 		} else {
 			console.log(`Telegram BOT is disabled, please enable it and make sure no other instance of Telegram BOT with same token is running`);
 		}

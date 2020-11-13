@@ -8,6 +8,7 @@ module.exports = class LazyRequest {
 		this.#request        = null;
         this.#isMultipart    = contains(header('content-type'), 'multipart/form-data');
 
+
         var body    = {},
             files   = {};
 
@@ -21,17 +22,17 @@ module.exports = class LazyRequest {
         this.#request = Object.assign(request.body, request.query, files);        
     }
 
-    // file        = (paramKey) => {
-    //     var val = undefined;
+    file        = (paramKey) => {
+        var val = undefined;
 
-    //     if(this.#isMultipart){
-    //     	each(this.#request, (key, value) => {
-    //             if(paramKey === key && value.constructor.name === 'LazyRequestFile') val = value;
-    //         });
-    //     }
+        if(this.#isMultipart){
+        	each(this.#request, (key, value) => {
+                if(paramKey === key && value.constructor.name === 'LazyRequestFile') val = value;
+            });
+        }
 
-    //     return val;
-    // }
+        return val;
+    }
 
     all         = () => {
         var data = {};
@@ -44,10 +45,12 @@ module.exports = class LazyRequest {
     }
 
     get         = (paramKey) => {
-        var val = undefined;
+        var val     = this.#request;
 
-        foreach(this.#request, (key, value) => {
-            if(paramKey === key) val = value;
+        foreach(split(paramKey, '.'), (index, subkey) => {
+            if(val){
+                val = hasKey(val, subkey) ? val[subkey] : null;
+            }
         });
 
         return val;

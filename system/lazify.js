@@ -15,6 +15,7 @@ module.exports = new class Lazify {
 		this.#assign('./modules/lazy-validator');
 		this.#assign('./modules/lazy-telegram');
 		this.#assign('./modules/lazy-hash');
+		this.#assign('./modules/lazy-mail');
 
 		/* Server Level */
 		this.#assign('./modules/lazy-express');

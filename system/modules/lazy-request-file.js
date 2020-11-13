@@ -12,7 +12,7 @@ module.exports = class LazyRequestFile {
         } else {
             var info = {};
             this.#fileType.fromBuffer(uploadedFile.buffer, (err, result) => {
-                info = result;
+                info = result || split(uploadedFile.mimetype, '/')[1];
             });
 
             this.name       = uploadedFile.originalname.replace(new RegExp(`.${uploadedFile.originalname.split('.').pop()}$`, 'ig'), '');
