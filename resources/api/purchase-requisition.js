@@ -11,7 +11,7 @@ GET('purchase-requisition/:id', () => {
         };
 
     validate(data, rule, () => {
-        var pr = PR.select('purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'locations.location_id as business_unit_id', 'locations.location_code as business_unit', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by')
+        var pr = PR.select('purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'locations.id as business_unit_id', 'locations.location_code as business_unit', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by')
             .leftJoin('locations', 'locations.id', 'business_unit_id')
             .leftJoin('users as processors', 'processors.id', 'purchase_requisitions.processed_by')
             .leftJoin('users as approvers', 'approvers.id', 'purchase_requisitions.approved_by')
