@@ -74,16 +74,16 @@ class LazyValidator {
          
         var messages    = [],
             isFile      = value !== undefined && value.constructor.name === 'LazyRequestFile',
-            isNumeric   = !isNaN(parseInt(String(value))),
-            isString    = !isNumeric;
-        
+            isNumeric   = isFile ? false : !isNaN(parseInt(String(value))),
+            isString    = isFile ? false : !isNumeric;
+
         /* Validation for REQUIRED and OPTIONAL */
-        if((isRequired || !isOptional) && ((isString && value.length === 0) || (isFile && value.isEmpty()))) {
+        if((isRequired || !isOptional) && ((isString && value.length === 0) || (isFile && value.empty()))) {
             messages.push(`cannot be empty`);
         } else {
             for(var rule of this.#rules[ruleKey]) {
                 rule = rule.trim();
-            
+
                 /* Validation for DATATYPE : ALPHA */
                 if(rule === 'is:alpha' && !isOptional) {
                     var isAlpha = value.search(/^[\sa-z]+$/gi) >= 0;
@@ -346,7 +346,7 @@ class LazyValidator {
                 values = value;
             }
 
-            if(typeof value === 'undefined' && !isOptional) {
+            if((value === null || typeof value === 'undefined') && !isOptional) {
                 /* Validation for REQUEST BODY */
                 messages.push(`\`${key}\` does not exists in request`);
 

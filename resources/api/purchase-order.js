@@ -399,3 +399,45 @@ DELETE('purchase-order-details/delete/:id', () => {
         }
     });
 });
+
+
+/* 
+ * Serial & Mac Uploads
+ */
+GET('purchase-order/list-csv/:purchase_order_number', () => {
+	var data = param(),
+		rule = {
+			"purchase_order_number" : ['required', 'exists:purchase_orders,number']
+		};
+	
+	validate(data, rule, () => {
+		res(PurchaseOrderSerial.where(data).get());
+	});
+});
+
+POST('purchase-order/import-csv', () => {
+	var data = req(`purchase_order_number`, 'csv'),
+		rule = {
+			purchase_order_number 	: [`required`, `exists:purchase_orders,number`],
+			csv 					: [`required`, `is:file`]
+		};
+
+	validate(data, rule, () => {
+		var total 		= 0,
+			imported 	= 0;
+
+		foreach(split(data.csv.getContent(), '\n'), (index, each) => {
+			var serial = {
+				purchase_order_number 	: data.purchase_order_number,
+				serial_number 			: split(each, ';')[0],
+				mac_address 			: split(each, ';')[1].replace('\r', ''),
+				created_at 				: now(true)
+			}
+			
+			total++;
+			if(PurchaseOrderSerial.insert(serial)) imported++;
+		});
+
+		res(`Total item : ${total}, successfully imported : ${imported}`);
+	});
+});
