@@ -28,8 +28,8 @@ GET('purchase-order/:id' 		, () => {
 		var 	po 			= result.first(),
 				poDetails 	= POD.instance();
 				  
-		poDetails 	.select('purchase_order_details.id', 'quantity', 'quantity_outstanding', 'purchase_order_details.created_at', 
-							'purchase_order_details.updated_at', 'brand', 'products.description as product_description', 'warehouses.location_code as warehouse', 'business_units.location_code as business_unit', 'purchase_requisitions.number')
+		poDetails 	.select('purchase_order_details.id', 'purchase_order_details.quantity', 'purchase_order_details.quantity_outstanding', 'purchase_order_details.created_at', 
+							'purchase_order_details.updated_at', 'brand', 'products.id as product_id', 'products.description as product_description', 'warehouses.id as warehouse_id', 'warehouses.location_code as warehouse', 'business_units.id as business_id', 'business_units.location_code as business_unit', 'purchase_requisition_id', 'purchase_requisitions.number')
 					.leftJoin('products', 'products.id', 'product_id')
 					.leftJoin('locations as business_units', 'business_units.id', 'purchase_order_details.business_unit_id')
 					.leftJoin('locations as warehouses', 'warehouses.id', 'purchase_order_details.warehouse_id')
