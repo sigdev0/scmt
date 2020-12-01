@@ -134,7 +134,7 @@ POST('purchase-contract/insert' 	, () => {
 PUT('purchase-contract/update' 		, () => {
 	var data = req('id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'updated_by', 'supplier_id'),
 		rule = {
-			number          : ['required' , 'unique:purchase_contracts,number,id,' + data.id],
+			// number          : ['required' , 'unique:purchase_contracts,number,id,' + data.id],
 			reference       : ['required'],
 			contract_type   : ['required' , 'in:normal,special'],
 			status      	: ['required', 'in:cancel,draft,submitted,approved,rejected'],
