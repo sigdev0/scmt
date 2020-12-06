@@ -19,7 +19,7 @@ GET('purchase-contract/:id' 		, () => {
 									.first();
 
 		if(purchaseContract){
-			var pcDetail = PCD 	.select('purchase_contract_details.id', 'quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_id', 'product_code', 'products.description as product_description' ,'brand')
+			var pcDetail = PCD 	.select('purchase_contract_details.id', 'quantity', 'price', 'mttr', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_id', 'product_code', 'products.description as product_description' ,'brand')
 								.leftJoin('products', 'products.id', 'product_id')
 								.where('purchase_contract_id', purchaseContract.id)
 								.get();
@@ -52,7 +52,7 @@ GET('purchase-contract' 			, () => {
     // if(result.get()){
 	var purchaseContracts = [];
 	foreach(result.get(), (indexPC, eachPC) => {
-		var details = PCD 	.select('quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_id', 'product_code', 'products.description as product_description', 'brand')
+		var details = PCD 	.select('quantity', 'price', 'guarantee_period', 'mttr', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_id', 'product_code', 'products.description as product_description', 'brand')
 							.leftJoin('products', 'products.id', 'product_id')
 							.where('purchase_contract_id', eachPC.id)
 							.get();
@@ -111,6 +111,7 @@ POST('purchase-contract/insert' 	, () => {
                 var pcdData = {
 					id 						: PCD.max('id') + 1,
 					quantity                : req('details')[i]['quantity'],
+					mttr                	: req('details')[i]['mttr'],
 					price                   : req('details')[i]['price'],
 					guarantee_period        : req('details')[i]['guarantee_period'],
 					guarantee_duration      : req('details')[i]['guarantee_duration'],
@@ -157,6 +158,7 @@ PUT('purchase-contract/update' 		, () => {
 				var pcdData = {
 					quantity                : req('details')[i]['quantity'],
 					price                   : req('details')[i]['price'],
+					mttr                	: req('details')[i]['mttr'],
 					guarantee_period        : req('details')[i]['guarantee_period'],
 					guarantee_duration      : req('details')[i]['guarantee_duration'],
 					product_id              : req('details')[i]['product_id'],
@@ -212,7 +214,7 @@ GET('purchase-contract-details-datatable/:id', () => {
         };
     
     validate(data, rule, () => {
-        var columnToSelect  = ['purchase_contract_details.id', 'quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_id', 'product_code', 'products.description as product_description' ,'brand']
+        var columnToSelect  = ['purchase_contract_details.id', 'mttr', 'quantity', 'price', 'guarantee_period', 'guarantee_duration', 'purchase_contract_details.created_at', 'product_id', 'product_code', 'products.description as product_description' ,'brand']
             columnToSearch  = ['product_code', 'brand'],
             keyword         = req('search').value,
             length          = req('length'),
@@ -277,6 +279,7 @@ PUT('purchase-contract-details/update/:id', () => {
         var data = {
             quantity                : req('quantity'),
 			price                   : req('price'),
+			mttr                   	: req('mttr'),
 			guarantee_period        : req('guarantee_period'),
 			guarantee_duration      : req('guarantee_duration'),
 			product_id              : req('product_id'),
