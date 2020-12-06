@@ -10,7 +10,7 @@ GET('purchase-contract/:id' 		, () => {
 		}
 
     validate(data, rule, () => {
-		var purchaseContract = PC 	.select('purchase_contracts.id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at',
+		var purchaseContract = PC 	.select('purchase_contracts.id', 'number', 'reference', 'mttr', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at',
 											'creators.username as created_by', 'updaters.username as updated_by', 'supplier_id' , 'supplier_description')
 									.leftJoin('users as creators', 'creators.id', 'purchase_contracts.created_by')
 									.leftJoin('users as updaters', 'updaters.id', 'purchase_contracts.updated_by')
@@ -35,7 +35,7 @@ GET('purchase-contract/:id' 		, () => {
 
 /* PC List */
 GET('purchase-contract' 			, () => {
-    var result = PC .select('purchase_contracts.id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at',
+    var result = PC .select('purchase_contracts.id', 'number', 'reference', 'mttr', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at',
 						'creators.username as created_by', 'updaters.username as updated_by', 'supplier_id', 'supplier_description')
 				.leftJoin('users as creators', 'creators.id', 'purchase_contracts.created_by')
 				.leftJoin('users as updaters', 'updaters.id', 'purchase_contracts.updated_by')
@@ -72,7 +72,7 @@ GET('purchase-contract' 			, () => {
 /* PC List Datatable */
 GET('purchase-contract-datatable', () => {
     var instance 		= PC.instance(),
-        columnToSelect 	= ['purchase_contracts.id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at', 'creators.username as created_by', 'updaters.username as updated_by', 'supplier_id', 'supplier_description'],
+        columnToSelect 	= ['purchase_contracts.id', 'number', 'reference', 'mttr', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'contract_date', 'purchase_contracts.created_at', 'purchase_contracts.updated_at', 'creators.username as created_by', 'updaters.username as updated_by', 'supplier_id', 'supplier_description'],
         columnToSearch 	= ['purchase_contracts.number', 'purchase_contracts.reference'];
 
     instance.leftJoin('users as creators', 'creators.id', 'purchase_contracts.created_by')
@@ -84,7 +84,7 @@ GET('purchase-contract-datatable', () => {
 
 /* PC Insert */
 POST('purchase-contract/insert' 	, () => {
-	var data = req('reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'created_by', 'supplier_id'),
+	var data = req('reference', 'description', 'mttr', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'created_by', 'supplier_id'),
 		rule = {
 			// number          : ['required' , 'unique:purchase_contracts'],
 			reference       : ['required'],
@@ -132,7 +132,7 @@ POST('purchase-contract/insert' 	, () => {
 
 /* PC Update */
 PUT('purchase-contract/update' 		, () => {
-	var data = req('id', 'number', 'reference', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'updated_by', 'supplier_id'),
+	var data = req('id', 'number', 'reference', 'mttr', 'description', 'contract_type', 'status', 'effective_date', 'expired_date', 'contract_date', 'updated_by', 'supplier_id'),
 		rule = {
 			// number          : ['required' , 'unique:purchase_contracts,number,id,' + data.id],
 			reference       : ['required'],

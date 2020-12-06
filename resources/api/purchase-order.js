@@ -1,4 +1,5 @@
-const 	PO 	= PurchaseOrder,
+const 	PRD = PurchaseRequisitionDetail,
+		PO 	= PurchaseOrder,
 		POD = PurchaseOrderDetail;
 
 /* PO Details */
@@ -11,31 +12,34 @@ GET('purchase-order/:id' 		, () => {
 	validate(data, rule, () => {
 		var result = PO.instance();
   
-		result 	.select('purchase_orders.id', 'purchase_orders.number', 'purchase_orders.reference', 'purchase_orders.status', 'currency', 'term_of_payment', 'sap_reference' ,
-						'processed_date', 'approved_date', 'cancelled_date', 'purchase_orders.created_at', 'purchase_orders.updated_at', 
-						'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 
-						'creators.username as created_by', 'updaters.username as updated_by', 'location_id', 'locations.location_code', 'purchase_contract_id', 'purchase_contracts.number as purchase_contract_number', 'purchase_orders.supplier_id', 'suppliers.supplier_description')
-				.leftJoin('users as processors' , 'processors.id'   , 'purchase_orders.processed_by')
-				.leftJoin('users as approvers'  , 'approvers.id'    , 'purchase_orders.approved_by')
-				.leftJoin('users as cancellers' , 'cancellers.id'   , 'purchase_orders.cancelled_by')
-				.leftJoin('users as creators'   , 'creators.id'     , 'purchase_orders.created_by')
-				.leftJoin('users as updaters'   , 'updaters.id'     , 'purchase_orders.updated_by')
-				.leftJoin('locations', 'locations.id', 'location_id')
-				.leftJoin('suppliers', 'suppliers.id', 'supplier_id')
-				.leftJoin('purchase_contracts', 'purchase_contracts.id', 'purchase_contract_id')
+		result 	.select('purchase_orders.id', 'purchase_orders.number', 'purchase_orders.reference', 'purchase_mode', 'purchase_orders.status', 'currency', 'term_of_payment', 'purchase_mode',
+					'processed_date', 'approved_date', 'cancelled_date', 'purchase_orders.created_at', 'purchase_orders.updated_at', 
+					'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 
+					'creators.username as created_by', 'updaters.username as updated_by', 'business_unit_id', 'locations.location_code', 'purchase_contract_id', 'purchase_contracts.number as purchase_contract_number', 'purchase_contracts.supplier_id', 'suppliers.supplier_description')
+				.leftJoin('users as processors' , 'processors.id'   		, 'purchase_orders.processed_by')
+				.leftJoin('users as approvers'  , 'approvers.id'    		, 'purchase_orders.approved_by')
+				.leftJoin('users as cancellers' , 'cancellers.id'   		, 'purchase_orders.cancelled_by')
+				.leftJoin('users as creators'   , 'creators.id'     		, 'purchase_orders.created_by')
+				.leftJoin('users as updaters'   , 'updaters.id'     		, 'purchase_orders.updated_by')
+				.leftJoin('locations'			, 'locations.id' 			, 'business_unit_id')
+				.leftJoin('purchase_contracts'	, 'purchase_contracts.id'	, 'purchase_contract_id')
+				.leftJoin('suppliers'			, 'suppliers.id' 			, 'purchase_contracts.supplier_id')
 				.where('purchase_orders.id' , data.id);
 		  
 		var 	po 			= result.first(),
 				poDetails 	= POD.instance();
 				  
-		poDetails 	.select('purchase_order_details.id', 'purchase_order_details.quantity', 'purchase_order_details.quantity_outstanding', 'purchase_order_details.created_at', 
-							'purchase_order_details.updated_at', 'brand', 'products.id as product_id', 'products.product_code as product_code', 'products.description as product_description', 'warehouses.id as warehouse_id', 'warehouses.location_code as warehouse', 'business_units.id as business_id', 'business_units.location_code as business_unit', 'purchase_requisition_id', 'purchase_requisitions.number')
-					.leftJoin('products', 'products.id', 'product_id')
-					.leftJoin('locations as business_units', 'business_units.id', 'purchase_order_details.business_unit_id')
-					.leftJoin('locations as warehouses', 'warehouses.id', 'purchase_order_details.warehouse_id')
-					.leftJoin('purchase_requisitions', 'purchase_requisitions.id', 'purchase_requisition_id')
-					.leftJoin('purchase_orders', 'purchase_orders.id', 'purchase_order_id')
-					.where({purchase_order_id : po.id});
+		poDetails 	.select('purchase_order_details.id', 'purchase_requisition_details.quantity', 'purchase_order_details.quantity_outstanding', 'purchase_order_details.created_at', 
+							'purchase_order_details.updated_at', 'brand', 'products.id as product_id', 'products.product_code as product_code', 'products.description as product_description', 'warehouses.id as warehouse_id', 'warehouses.location_code as warehouse', 'business_units.id as business_id', 'business_units.location_code as business_unit', 'purchase_requisitions.id as purchase_requisitions_id', 'purchase_requisitions.number')
+							
+					.leftJoin('purchase_requisitions' 		, 'purchase_requisitions.id', 'purchase_order_details.purchase_requisition_id')
+					.leftJoin('purchase_requisition_details', 'purchase_requisitions.id', 'purchase_requisition_details.purchase_requisition_id')
+					.leftJoin('products' 					, 'products.id' 			, 'purchase_requisition_details.product_id')
+					.leftJoin('locations as business_units' , 'business_units.id' 		, 'purchase_requisitions.business_unit_id')
+					.leftJoin('locations as warehouses' 	, 'warehouses.id' 			, 'purchase_requisition_details.location_id')
+					.leftJoin('purchase_orders' 			, 'purchase_orders.id' 		, 'purchase_order_details.purchase_order_id')
+
+					.where("purchase_orders.id", po.id);
 		  
 			po.details = poDetails.get();
 
@@ -47,18 +51,18 @@ GET('purchase-order/:id' 		, () => {
 GET('purchase-order'    		, () => {
     var result = PO.instance();
 
-    result 	.select('purchase_orders.id', 'purchase_orders.number', 'purchase_orders.reference', 'purchase_orders.status', 'currency', 'term_of_payment', 'sap_reference', 
+    result 	.select('purchase_orders.id', 'purchase_orders.number', 'purchase_orders.reference', 'purchase_mode', 'purchase_orders.status', 'currency', 'term_of_payment', 'purchase_mode',
 					'processed_date', 'approved_date', 'cancelled_date', 'purchase_orders.created_at', 'purchase_orders.updated_at', 
 					'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 
-					'creators.username as created_by', 'updaters.username as updated_by', 'location_id', 'locations.location_code', 'purchase_contract_id', 'purchase_contracts.number as purchase_contract_number', 'purchase_orders.supplier_id', 'suppliers.supplier_description')
-        	.leftJoin('users as processors' , 'processors.id'   , 'purchase_orders.processed_by')
-			.leftJoin('users as approvers'  , 'approvers.id'    , 'purchase_orders.approved_by')
-			.leftJoin('users as cancellers' , 'cancellers.id'   , 'purchase_orders.cancelled_by')
-			.leftJoin('users as creators'   , 'creators.id'     , 'purchase_orders.created_by')
-			.leftJoin('users as updaters'   , 'updaters.id'     , 'purchase_orders.updated_by')
-			.leftJoin('locations', 'locations.id', 'location_id')
-			.leftJoin('suppliers', 'suppliers.id', 'supplier_id')
-			.leftJoin('purchase_contracts', 'purchase_contracts.id', 'purchase_contract_id')
+					'creators.username as created_by', 'updaters.username as updated_by', 'business_unit_id', 'locations.location_code', 'purchase_contract_id', 'purchase_contracts.number as purchase_contract_number', 'purchase_contracts.supplier_id', 'suppliers.supplier_description')
+        	.leftJoin('users as processors' , 'processors.id'   		, 'purchase_orders.processed_by')
+			.leftJoin('users as approvers'  , 'approvers.id'    		, 'purchase_orders.approved_by')
+			.leftJoin('users as cancellers' , 'cancellers.id'   		, 'purchase_orders.cancelled_by')
+			.leftJoin('users as creators'   , 'creators.id'     		, 'purchase_orders.created_by')
+			.leftJoin('users as updaters'   , 'updaters.id'     		, 'purchase_orders.updated_by')
+			.leftJoin('locations'			, 'locations.id' 			, 'business_unit_id')
+			.leftJoin('purchase_contracts'	, 'purchase_contracts.id'	, 'purchase_contract_id')
+			.leftJoin('suppliers'			, 'suppliers.id' 			, 'purchase_contracts.supplier_id')
     
 	var limit   = req('limit'),
 		offset  = req('offset'),
@@ -73,14 +77,17 @@ GET('purchase-order'    		, () => {
         // var details = POD.instance();
 
         var details = POD.instance();
-            details .select('purchase_order_details.id', 'purchase_order_details.quantity', 'purchase_order_details.quantity_outstanding', 'purchase_order_details.created_at', 
-            				'purchase_order_details.updated_at', 'brand', 'products.id as product_id', 'products.product_code as product_code', 'products.description as product_description', 'warehouses.id as warehouse_id', 'warehouses.location_code as warehouse', 'business_units.id as business_id', 'business_units.location_code as business_unit', 'purchase_requisitions.id as purchase_requisitions_id', 'purchase_requisitions.number')
-					.leftJoin('products', 'products.id', 'product_id')
-					.leftJoin('locations as business_units', 'business_units.id', 'purchase_order_details.business_unit_id')
-					.leftJoin('locations as warehouses', 'warehouses.id', 'purchase_order_details.warehouse_id')
-					.leftJoin('purchase_requisitions', 'purchase_requisitions.id', 'purchase_requisition_id')
-					.leftJoin('purchase_orders', 'purchase_orders.id', 'purchase_order_id')
-					.where({purchase_order_id : eachPO.id});
+            details .select('purchase_order_details.id', 'purchase_requisition_details.quantity', 'purchase_order_details.quantity_outstanding', 'purchase_order_details.created_at', 
+							'purchase_order_details.updated_at', 'brand', 'products.id as product_id', 'products.product_code as product_code', 'products.description as product_description', 'warehouses.id as warehouse_id', 'warehouses.location_code as warehouse', 'business_units.id as business_id', 'business_units.location_code as business_unit', 'purchase_requisitions.id as purchase_requisitions_id', 'purchase_requisitions.number')
+							
+					.leftJoin('purchase_requisitions' 		, 'purchase_requisitions.id', 'purchase_order_details.purchase_requisition_id')
+					.leftJoin('purchase_requisition_details', 'purchase_requisitions.id', 'purchase_requisition_details.purchase_requisition_id')
+					.leftJoin('products' 					, 'products.id' 			, 'purchase_requisition_details.product_id')
+					.leftJoin('locations as business_units' , 'business_units.id' 		, 'purchase_requisitions.business_unit_id')
+					.leftJoin('locations as warehouses' 	, 'warehouses.id' 			, 'purchase_requisition_details.location_id')
+					.leftJoin('purchase_orders' 			, 'purchase_orders.id' 		, 'purchase_order_details.purchase_order_id')
+
+					.where("purchase_orders.id", eachPO.id);
 
             eachPO.details = details.get() || {};
             purchase_orders.push(eachPO);
@@ -92,38 +99,39 @@ GET('purchase-order'    		, () => {
 /* PO List Datatable */
 GET('purchase-order-datatable', () => {
     var instance 		= PO.instance(),
-        columnToSelect 	= [ 'purchase_orders.id', 'purchase_orders.number', 'purchase_orders.reference', 'purchase_orders.status', 'currency', 'term_of_payment', 'sap_reference',
+        columnToSelect 	= [ 'purchase_orders.id', 'purchase_orders.number', 'purchase_orders.reference', 'purchase_mode', 'purchase_orders.status', 'currency', 'term_of_payment', 'purchase_mode',
 							'processed_date', 'approved_date', 'cancelled_date', 'purchase_orders.created_at', 'purchase_orders.updated_at', 
 							'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 
-							'creators.username as created_by', 'updaters.username as updated_by', 'location_id', 'locations.location_code', 'purchase_contract_id', 'purchase_contracts.number as purchase_contract_number', 'purchase_orders.supplier_id', 'suppliers.supplier_description'],
+							'creators.username as created_by', 'updaters.username as updated_by', 'business_unit_id', 'locations.location_code', 'purchase_contract_id', 'purchase_contracts.number as purchase_contract_number', 'purchase_contracts.supplier_id', 'suppliers.supplier_description'],
         columnToSearch 	= ['purchase_orders.number', 'purchase_orders.reference'];
 
-    instance.leftJoin('users as processors' , 'processors.id'   , 'purchase_orders.processed_by')
-			.leftJoin('users as approvers'  , 'approvers.id'    , 'purchase_orders.approved_by')
-			.leftJoin('users as cancellers' , 'cancellers.id'   , 'purchase_orders.cancelled_by')
-			.leftJoin('users as creators'   , 'creators.id'     , 'purchase_orders.created_by')
-			.leftJoin('users as updaters'   , 'updaters.id'     , 'purchase_orders.updated_by')
-			.leftJoin('locations', 'locations.id', 'location_id')
-			.leftJoin('suppliers', 'suppliers.id', 'supplier_id')
-			.leftJoin('purchase_contracts', 'purchase_contracts.id', 'purchase_contract_id');
+	instance.leftJoin('users as processors' , 'processors.id'   		, 'purchase_orders.processed_by')
+			.leftJoin('users as approvers'  , 'approvers.id'    		, 'purchase_orders.approved_by')
+			.leftJoin('users as cancellers' , 'cancellers.id'   		, 'purchase_orders.cancelled_by')
+			.leftJoin('users as creators'   , 'creators.id'     		, 'purchase_orders.created_by')
+			.leftJoin('users as updaters'   , 'updaters.id'     		, 'purchase_orders.updated_by')
+			.leftJoin('locations'			, 'locations.id' 			, 'business_unit_id')
+			.leftJoin('purchase_contracts'	, 'purchase_contracts.id'	, 'purchase_contract_id')
+			.leftJoin('suppliers'			, 'suppliers.id' 			, 'purchase_contracts.supplier_id')
 
     res(instance.datatable(columnToSelect, columnToSearch));
 });
 
 /* PO Insert */
 POST('purchase-order/insert' 	, function(){
-	var data = req( 'reference', 'status', 'currency', 'term_of_payment', 'sap_reference',
-					'location_id', 'purchase_contract_id', 'supplier_id', 'created_by'),
+	var data = req( 'reference', 'status', 'currency', 'term_of_payment', 'purchase_mode',
+					'business_unit_id', 'purchase_contract_id', 'created_by'),
 		rule = {
 			// number                  : ['required' , 'unique:purchase_orders'],
 			reference               : ['required'],
 			status      			: ['required', 'in:cancel,draft,submitted,approved,rejected'],
+			purchase_mode  			: ['required', 'in:consigment,regular'],
 			currency                : ['required'],
 			term_of_payment         : ['required'],
 			created_by              : ['required' , 'exists:users,id'],
-			location_id             : ['required' , 'exists:locations,id'],
+			business_unit_id        : ['required' , 'exists:locations,id'],
 			purchase_contract_id    : ['required' , 'exists:purchase_contracts,id'],
-			supplier_id             : ['required' , 'exists:suppliers,id'],
+			// supplier_id             : ['required' , 'exists:suppliers,id'],
 		};
 
     validate(data, rule, () => {
@@ -140,16 +148,17 @@ POST('purchase-order/insert' 	, function(){
             for(var i = 0 ; i < count(req('details')); i++){
 				var poDetails                     		= POD.instance();
 					poDetails.id 						= POD.max('id') + 1;
-					poDetails.quantity 					= req('details')[i]['quantity'];
+					// poDetails.quantity 					= req('details')[i]['quantity'];
 					poDetails.quantity_outstanding 		= req('details')[i]['quantity_outstanding'];
 					poDetails.created_at 				= now();
-					poDetails.product_id 				= req('details')[i]['product_id'];
-					poDetails.business_unit_id 			= req('details')[i]['business_unit_id'];
-					poDetails.warehouse_id 				= req('details')[i]['warehouse_id'];
+					// poDetails.product_id 				= req('details')[i]['product_id'];
+					// poDetails.business_unit_id 			= req('details')[i]['business_unit_id'];
+					// poDetails.warehouse_id 				= req('details')[i]['warehouse_id'];
 					poDetails.purchase_requisition_id	= req('details')[i]['purchase_requisition_id'];
 					poDetails.purchase_order_id 		= purchaseOrder.id;
 
 				poDetails.insert();
+				// PRD.update({}, {purchase_});
 
                 // validate(details, {
                 //     quantity                     : 'required',
@@ -160,7 +169,9 @@ POST('purchase-order/insert' 	, function(){
                 //     purchase_order_id      : 'required' , 'exists:purchase_orders,id',
                 // }).success( () => {
                 // });
-            }
+			}
+			
+			
             res(purchaseOrder);
         }
     });
@@ -168,17 +179,18 @@ POST('purchase-order/insert' 	, function(){
 
 /* PO Update */
 PUT('purchase-order/update' 	, function(){
-	var data = req('id', 'number', 'reference', 'status', 'currency', 'term_of_payment', 'sap_reference', 'updated_by', 'location_id', 'purchase_contract_id', 'supplier_id'),
+	var data = req('id', 'number', 'reference', 'status', 'purchase_mode', 'currency', 'term_of_payment', 'updated_by', 'business_unit_id', 'purchase_contract_id'),
 		rule = {
 			number                  : ['required' , 'unique:purchase_orders,number,' + data.id],
 			reference               : ['required'],
 			status      			: ['required', 'in:cancel,draft,submitted,approved,rejected'],
+			purchase_mode  			: ['required', 'in:consigment,regular'],
 			currency                : ['required'],
 			term_of_payment         : ['required'],
 			updated_by              : ['required' , 'exists:users,id'],
-			location_id             : ['required' , 'exists:locations,id'],
+			business_unit_id 		: ['required' , 'exists:locations,id'],
 			purchase_contract_id    : ['required' , 'exists:purchase_contracts,id'],
-			supplier_id             : ['required' , 'exists:suppliers,id'],
+			// supplier_id             : ['required' , 'exists:suppliers,id'],
 		};
 
     validate(data, rule, () => {
@@ -195,12 +207,12 @@ PUT('purchase-order/update' 	, function(){
             for(var i = 0 ; i < count(req('details')); i++){
 				var poDetails                     		= POD.find(req('details')[i]['id']);
 
-					poDetails.quantity                 	= req('details')[i]['quantity'];
+					// poDetails.quantity                 	= req('details')[i]['quantity'];
 					poDetails.quantity_outstanding 		= req('details')[i]['quantity_outstanding'];
 					poDetails.updated_at               	= now();
-					poDetails.product_id               	= req('details')[i]['product_id'];
-					poDetails.business_unit_id         	= req('details')[i]['business_unit_id'];
-					poDetails.warehouse_id             	= req('details')[i]['warehouse_id'];
+					// poDetails.product_id               	= req('details')[i]['product_id'];
+					// poDetails.business_unit_id         	= req('details')[i]['business_unit_id'];
+					// poDetails.warehouse_id             	= req('details')[i]['warehouse_id'];
 					poDetails.purchase_requisition_id 	= req('details')[i]['purchase_requisition_id'];
 					// poDetails.purchase_order_id        	= purchaseOrder.id;
 
@@ -297,63 +309,23 @@ GET('purchase-order-details-datatable/:id', () => {
         };
     
     validate(data, rule, () => {
-        var columnToSelect  = ['purchase_order_details.id', 'quantity', 'quantity_outstanding', 'purchase_order_details.created_at', 'purchase_order_details.updated_at', 'products.description as product_description', 'warehouses.location_code as warehouse', 'business_units.location_code as business_unit', 'purchase_orders.number']
-            columnToSearch  = ['products.description as product_description', 'warehouses.location_code as warehouse', 'business_units.location_code as business_unit'],
-            keyword         = req('search').value,
-            length          = req('length'),
-            start           = req('start'),
-            orderBy         = i(req('order')[0].column),
-            orderType       = req('order')[0].dir;
-            // keyword         = '',
-            // length          = 10,
-            // start           = 0,
-            // orderBy         = '-',
-            // orderType       = '-';
+		var instance 		= POD.instance(),
+			columnToSelect 	= [ 'purchase_order_details.id', 
+								'purchase_requisition_details.quantity', 
+								'purchase_order_details.quantity_outstanding', 'purchase_order_details.created_at', 
+								'purchase_order_details.updated_at',
+								//  'brand', 'products.id as product_id', 'products.product_code as product_code', 'products.description as product_description', 'warehouses.id as warehouse_id', 'warehouses.location_code as warehouse', 'business_units.id as business_id', 'business_units.location_code as business_unit', 'purchase_requisitions.id as purchase_requisitions_id', 'purchase_requisitions.number'
+								],
+			columnToSearch 	= ['product_description', 'as warehouse', 'business_unit'];
 
-        var whereQuery  = '',
-            orderQuery  = '',
-            limitQuery  = `LIMIT ${length} OFFSET ${start}`;
+			instance.leftJoin('purchase_requisition_details', 'purchase_requisition_details.purchase_requisition_id', 'purchase_order_details.purchase_requisition_id')
+					// .leftJoin('purchase_requisitions' 		, 'purchase_requisitions.id', 'purchase_order_details.purchase_requisition_id')
+					// .leftJoin('products' 					, 'products.id' 			, 'purchase_requisition_details.product_id')
+					// .leftJoin('locations as business_units' , 'business_units.id' 		, 'purchase_requisitions.business_unit_id')
+					// .leftJoin('locations as warehouses' 	, 'warehouses.id' 			, 'purchase_requisition_details.location_id')
+					// .leftJoin('purchase_orders' 			, 'purchase_orders.id' 		, 'purchase_order_details.purchase_order_id')
 
-        foreach(columnToSearch, (index, each) => {
-            whereQuery += (i(index) === 0 ? '' : ' OR ') + `${each} LIKE '%${keyword}%'`;
-        });
-
-        if(orderBy !== '-' && orderType !== '-'){
-            orderQuery = `ORDER BY ${columnToSelect[orderBy]} ${orderType}`;
-        }
-
-        var recordsTotal    = POD.instance().count(),
-		
-            recordsFiltered = query(`SELECT COUNT(*) AS total
-                                     FROM dev.purchase_order_details
-                                     JOIN dev.products  					ON products.id  		= product_id
-                                     JOIN dev.locations AS business_units  	ON business_units.id  	= purchase_order_details.business_unit_id
-                                     JOIN dev.locations AS warehouses  		ON warehouses.id  		= purchase_order_details.warehouse_id
-                                     JOIN dev.purchase_orders 				ON purchase_orders.id 	= purchase_order_id
-                                     WHERE purchase_order_id = '${data.id}'`).first().total,
-
-            rawResult       = query(`SELECT ${columnToSelect.join(', ')}
-                                     FROM dev.purchase_order_details
-                                     JOIN dev.products  					ON products.id  		= product_id
-                                     JOIN dev.locations AS business_units  	ON business_units.id  	= purchase_order_details.business_unit_id
-                                     JOIN dev.locations AS warehouses  		ON warehouses.id  		= purchase_order_details.warehouse_id
-                                     JOIN dev.purchase_orders 				ON purchase_orders.id 	= purchase_order_id
-                                     WHERE purchase_order_id = '${data.id}' AND (${whereQuery})
-                                     ${orderQuery}
-                                     ${limitQuery}`).get();
-
-        var result = [];
-        foreach(rawResult, (index, row) => {
-            row.index = (i(length)) * i(start) + (i(index) + 1);
-			result.push(row);
-        });
-        
-        res({
-            draw 			: req('draw'),
-			recordsTotal 	: recordsTotal,
-			recordsFiltered : recordsFiltered,
-			data 			: result
-        });
+		res(instance.datatable(columnToSelect, columnToSearch, {"purchase_order_details.purchase_order_id" : data.id}));
     });
 });
 

@@ -347,3 +347,48 @@ DELETE('purchase-requisition-details/delete/:id', () => {
         }
     });
 });
+
+
+/* 
+ * 
+ * PR By PC
+ * 
+ */
+GET('purchase-requisition/by-purchase-contract/:number', () => {
+    var data = param(),
+        rule = {
+            number : ['exists:purchase_contracts,number']
+        };
+    
+    validate(data, rule, () => {
+        var pr = PR.instance();
+
+        pr = PurchaseRequisition
+            .select('purchase_requisitions.id', 'purchase_requisitions.number', 'business_unit.location_code as business_unit_code', 'business_unit.description as business_unit_description')
+
+            .join('purchase_requisition_details', 'purchase_requisition_id'                     , 'purchase_requisitions.id')
+            .join('purchase_contract_details'   , 'purchase_contract_details.product_id'        , 'purchase_requisition_details.product_id')
+            .join('purchase_contracts'          , 'purchase_contracts.id'                       , 'purchase_contract_id')
+            .join('locations as business_unit'  , 'purchase_requisitions.business_unit_id'      , 'business_unit.id')
+
+            .where('purchase_contracts.number', data.number)
+            .groupBy('purchase_requisitions.id', 'purchase_requisitions.number', 'business_unit.location_code', 'business_unit.description')
+            .get();
+
+        foreach(pr, (index, each) => {
+            each.details = PR.select('products.brand', 'products.product_code', 'products.type', 'products.description', 'purchase_contract_details.price', 'purchase_contract_details.quantity', 'warehouse.location_code as warehouse_code', 'warehouse.description as warehouse_description')
+
+                            .join('purchase_requisition_details'    , 'purchase_requisition_id'                     , 'purchase_requisitions.id')
+                            .join('products'                        , 'products.id'                                 , 'purchase_requisition_details.product_id')
+                            .join('purchase_contract_details'       , 'purchase_contract_details.product_id'        , 'purchase_requisition_details.product_id')
+                            .join('purchase_contracts'              , 'purchase_contracts.id'                       , 'purchase_contract_id')
+                            .join('locations as warehouse'          , 'purchase_requisition_details.location_id'    , 'warehouse.id')
+
+                            .where('purchase_requisitions.id', each.id)
+                            .get();
+        });
+
+
+        res(pr);
+    });
+});
