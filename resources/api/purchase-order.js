@@ -402,6 +402,28 @@ GET('purchase-order/list-items/:purchase_order_number', () => {
 	});
 });
 
+GET('purchase-order/list-items-datatable/:purchase_order_number', () => {
+	var data = param(),
+		rule = {
+			"purchase_order_number" : ['required', 'exists:purchase_orders,number'],
+		};
+	
+	validate(data, rule, () => {
+		var instance 		= Item.instance(),
+			columnToSelect 	= [`items.id`, `products.product_code`, `products.brand`, `products.type`, `products.description`, `items.serial_number`, `items.mac_address`, `items.status`],
+			columnToSearch 	= columnToSelect;
+
+		instance.join('products'		, 'products.id'			, 'product_id')
+				.join('purchase_orders'	, 'purchase_orders.id'	, 'purchase_order_id');
+
+		if(req('status') && isIn(req('status'), ['open', 'error', 'closed'])){
+			instance.where('items.status', req('status'));
+		}
+
+		res(instance.where('purchase_orders.number', data.purchase_order_number).datatable(columnToSelect, columnToSearch));
+	});
+});
+
 POST('purchase-order/import-items', () => {
 	var data = req(`purchase_order_number`, `product_id`, `csv`, `created_by`),
 		rule = {
@@ -468,7 +490,7 @@ PUT('purchase-order/scan-item', () => {
 		if(item.props('status') === 'open'){
 
 		} else if(item.props('status') === 'closed'){
-
+			res(`Serial number '${data.serial_number}' for Purhase Order '${data.purchase_order_number}' is already scanned by another user. ${item.remarks}`, 422);
 		} else {
 			res(`Serial number '${data.serial_number}' for Purhase Order '${data.purchase_order_number}' is being updated by another user`, 422);
 		}
