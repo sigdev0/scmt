@@ -376,18 +376,23 @@ DELETE('purchase-order-details/delete/:id', () => {
 /* 
  * Serial & Mac Uploads
  */
-GET('purchase-order/list-csv/:purchase_order_number', () => {
+GET('purchase-order/list-items/:purchase_order_number', () => {
 	var data = param(),
 		rule = {
 			"purchase_order_number" : ['required', 'exists:purchase_orders,number']
 		};
 	
 	validate(data, rule, () => {
-		res(PurchaseOrderSerial.where(data).get());
+		var result = 	Item.select(`items.id`, `products.product_code`, `products.brand`, `products.type`, `products.description`, `items.serial_number`, `items.mac_address`, `items.status`)
+						.join('products', 'products.id', 'product_id')
+						.join('purchase_orders', 'purchase_orders.id', 'purchase_order_id')
+						.where('purchase_orders.number', data.purchase_order_number).get();
+
+		res(result);
 	});
 });
 
-POST('purchase-order/import-csv', () => {
+POST('purchase-order/import-items', () => {
 	var data = req(`purchase_order_number`, `product_id`, `csv`, `created_by`),
 		rule = {
 			purchase_order_number 	: [`required`, `exists:purchase_orders,number`],
@@ -413,15 +418,23 @@ POST('purchase-order/import-csv', () => {
 				serial_number 			: split(each, ';')[0],
 				mac_address 			: split(each, ';')[1].replace('\r', ''),
 				created_at 				: now(true),
-				created_by 				: data.created_by
+				created_by 				: data.created_by,
+				status 					: 'open'
 			}
 			
 			total++;
+			var current = {
+				purchase_order_id 	: serial.purchase_order_id,
+				product_id 			: serial.product_id,
+				serial_number 		: serial.serial_number,
+				mac_address		 	: serial.mac_address
+			};
+
 			if(Item.insert(serial)) {
 				imported++;
-				success.push(serial);
+				success.push(current);
 			} else {
-				failed.push(serial);
+				failed.push(current);
 			}
 		});
 
@@ -430,4 +443,9 @@ POST('purchase-order/import-csv', () => {
 			failed : failed
 		});
 	});
+});
+
+
+PUT('purchase-order/scan-item', () => {
+	
 });
