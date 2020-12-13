@@ -148,7 +148,7 @@ POST('purchase-order/insert' 	, function(){
             for(var i = 0 ; i < count(req('details')); i++){
 				var poDetails                     		= POD.instance();
 					poDetails.id 						= POD.max('id') + 1;
-					// poDetails.quantity 					= req('details')[i]['quantity'];
+					poDetails.quantity 					= req('details')[i]['quantity'];
 					poDetails.quantity_outstanding 		= req('details')[i]['quantity_outstanding'];
 					poDetails.created_at 				= now();
 					// poDetails.product_id 				= req('details')[i]['product_id'];
@@ -207,7 +207,7 @@ PUT('purchase-order/update' 	, function(){
             for(var i = 0 ; i < count(req('details')); i++){
 				var poDetails                     		= POD.find(req('details')[i]['id']);
 
-					// poDetails.quantity                 	= req('details')[i]['quantity'];
+					poDetails.quantity                 	= req('details')[i]['quantity'];
 					poDetails.quantity_outstanding 		= req('details')[i]['quantity_outstanding'];
 					poDetails.updated_at               	= now();
 					// poDetails.product_id               	= req('details')[i]['product_id'];
@@ -388,28 +388,46 @@ GET('purchase-order/list-csv/:purchase_order_number', () => {
 });
 
 POST('purchase-order/import-csv', () => {
-	var data = req(`purchase_order_number`, 'csv'),
+	var data = req(`purchase_order_number`, `product_id`, `csv`, `created_by`),
 		rule = {
 			purchase_order_number 	: [`required`, `exists:purchase_orders,number`],
+			product_id 				: [`required`, `exists:products,id`],
+			created_by 				: [`required`, `exists:users,id`],
 			csv 					: [`required`, `is:file`]
 		};
 
 	validate(data, rule, () => {
-		var total 		= 0,
-			imported 	= 0;
+		var total 				= 0,
+			imported 			= 0,
+			success 			= [],
+			failed 				= [],
+			purchase_order_id 	= PO.where({number : data.purchase_order_number}).first().props('id');
+
 
 		foreach(split(data.csv.getContent(), '\n'), (index, each) => {
 			var serial = {
-				purchase_order_number 	: data.purchase_order_number,
+				id 						: Item.max('id') + 1,
+				purchase_order_id		: purchase_order_id,
+				product_id				: data.product_id,
+				is_scanned 				: 0,
 				serial_number 			: split(each, ';')[0],
 				mac_address 			: split(each, ';')[1].replace('\r', ''),
-				created_at 				: now(true)
+				created_at 				: now(true),
+				created_by 				: data.created_by
 			}
 			
 			total++;
-			if(PurchaseOrderSerial.insert(serial)) imported++;
+			if(Item.insert(serial)) {
+				imported++;
+				success.push(serial);
+			} else {
+				failed.push(serial);
+			}
 		});
 
-		res(`Total item : ${total}, successfully imported : ${imported}`);
+		res({
+			success: success,
+			failed : failed
+		});
 	});
 });
