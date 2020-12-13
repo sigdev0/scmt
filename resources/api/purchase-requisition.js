@@ -376,7 +376,7 @@ GET('purchase-requisition/by-purchase-contract/:number', () => {
             .get();
 
         foreach(pr, (index, each) => {
-            each.details = PR.select('products.brand', 'products.product_code', 'products.type', 'products.description', 'purchase_contract_details.price', 'purchase_contract_details.quantity', 'warehouse.location_code as warehouse_code', 'warehouse.description as warehouse_description')
+            each.details = PR.select('products.id as product_id', 'products.brand', 'products.product_code', 'products.type', 'products.description', 'purchase_contract_details.price', 'purchase_contract_details.quantity', 'warehouse.location_code as warehouse_code', 'warehouse.description as warehouse_description')
 
                             .join('purchase_requisition_details'    , 'purchase_requisition_id'                     , 'purchase_requisitions.id')
                             .join('products'                        , 'products.id'                                 , 'purchase_requisition_details.product_id')

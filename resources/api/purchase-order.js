@@ -151,7 +151,7 @@ POST('purchase-order/insert' 	, function(){
 					poDetails.quantity 					= req('details')[i]['quantity'];
 					poDetails.quantity_outstanding 		= req('details')[i]['quantity_outstanding'];
 					poDetails.created_at 				= now();
-					// poDetails.product_id 				= req('details')[i]['product_id'];
+					poDetails.product_id 				= req('details')[i]['product_id'];
 					// poDetails.business_unit_id 			= req('details')[i]['business_unit_id'];
 					// poDetails.warehouse_id 				= req('details')[i]['warehouse_id'];
 					poDetails.purchase_requisition_id	= req('details')[i]['purchase_requisition_id'];
@@ -210,7 +210,7 @@ PUT('purchase-order/update' 	, function(){
 					poDetails.quantity                 	= req('details')[i]['quantity'];
 					poDetails.quantity_outstanding 		= req('details')[i]['quantity_outstanding'];
 					poDetails.updated_at               	= now();
-					// poDetails.product_id               	= req('details')[i]['product_id'];
+					poDetails.product_id               	= req('details')[i]['product_id'];
 					// poDetails.business_unit_id         	= req('details')[i]['business_unit_id'];
 					// poDetails.warehouse_id             	= req('details')[i]['warehouse_id'];
 					poDetails.purchase_requisition_id 	= req('details')[i]['purchase_requisition_id'];
@@ -383,10 +383,16 @@ GET('purchase-order/list-items/:purchase_order_number', () => {
 		};
 	
 	validate(data, rule, () => {
-		var result = 	Item.select(`items.id`, `products.product_code`, `products.brand`, `products.type`, `products.description`, `items.serial_number`, `items.mac_address`, `items.status`)
-						.join('products', 'products.id', 'product_id')
-						.join('purchase_orders', 'purchase_orders.id', 'purchase_order_id')
-						.where('purchase_orders.number', data.purchase_order_number),
+		var result = 	Item.select(`items.id`, `products.product_code`, `products.brand`, `products.type`, `products.description`, `items.serial_number`, `items.mac_address`, `items.status`, `users.id as user_id`, `users.username as scanned_by`, `scanned_at`, `locations.location_code as warehouse_code`, `locations.description as warehouse_description`)
+							
+							.leftJoin('users'		, 'users.id'			, 'scanned_by')
+							.leftJoin('locations'	, 'locations.id'		, 'warehouse_id')
+							.join('products'		, 'products.id'			, 'product_id')
+							.join('purchase_orders'	, 'purchase_orders.id'	, 'purchase_order_id')
+
+							.orderBy('id')
+
+							.where('purchase_orders.number', data.purchase_order_number),
 			status = 'all';
 		
 		if(req('status') && isIn(req('status'), ['open', 'error', 'closed'])){
@@ -410,10 +416,12 @@ GET('purchase-order/list-items-datatable/:purchase_order_number', () => {
 	
 	validate(data, rule, () => {
 		var instance 		= Item.instance(),
-			columnToSelect 	= [`items.id`, `products.product_code`, `products.brand`, `products.type`, `products.description`, `items.serial_number`, `items.mac_address`, `items.status`],
+			columnToSelect 	= [`items.id`, `products.product_code`, `products.brand`, `products.type`, `products.description`, `items.serial_number`, `items.mac_address`, `items.status`, `users.id as user_id`, `users.username as scanned_by`, `scanned_at`, `locations.location_code as warehouse_code`, `locations.description as warehouse_description`],
 			columnToSearch 	= columnToSelect;
 
-		instance.join('products'		, 'products.id'			, 'product_id')
+		instance.leftJoin('users'		, 'users.id'			, 'scanned_by')
+				.leftJoin('locations'	, 'locations.id'		, 'warehouse_id')
+				.join('products'		, 'products.id'			, 'product_id')
 				.join('purchase_orders'	, 'purchase_orders.id'	, 'purchase_order_id');
 
 		if(req('status') && isIn(req('status'), ['open', 'error', 'closed'])){
@@ -452,8 +460,8 @@ POST('purchase-order/import-items', () => {
 				created_at 				: now(true),
 				created_by 				: data.created_by,
 				status 					: 'open'
-			}
-			
+			};
+
 			total++;
 			var current = {
 				purchase_order_id 	: serial.purchase_order_id,
@@ -478,21 +486,38 @@ POST('purchase-order/import-items', () => {
 });
 
 PUT('purchase-order/scan-item', () => {
-	var data = req(`serial_number`, `purchase_order_number`, `warehouse_id`),
+	var data = req(`serial_number`, `purchase_order_number`, `warehouse_id`, `scanned_by`),
 		rule = {
 			serial_number 			: ['required', 'exists:items,serial_number'],
 			purchase_order_number 	: ['required', 'exists:purchase_orders,number'],
-			warehouse_id 			: ['required', 'exists:locations,id']
+			warehouse_id 			: ['required', 'exists:locations,id'],
+			scanned_by 				: ['required', 'exists:users,id']
 		};
 	
 	validate(data, rule, () => {
 		var item = Item.where('serial_number', data.serial_number).first();
 		if(item.props('status') === 'open'){
+			var user 		= User.find(data.scanned_by),
+				warehouse 	= Location.find(data.warehouse_id),
+				
+				success 	= item.update({
+					status 		: 'closed',
+					scanned_by 	: data.scanned_by,
+					warehouse_id: data.warehouse_id,
+					scanned_at 	: now(true),
+					is_scanned 	: 1,
+					remarks 	: `Scanned by '${user.username}' from '${warehouse.location_code} (${warehouse.description})'`
+				});
 
-		} else if(item.props('status') === 'closed'){
-			res(`Serial number '${data.serial_number}' for Purhase Order '${data.purchase_order_number}' is already scanned by another user. ${item.remarks}`, 422);
+			if(item){
+				res(`Serial number '${data.serial_number}' successfully scanned`);
+			} else {
+				res(['Internal server error'], 500);
+			}
+		// } else if(item.props('status') === 'closed'){
 		} else {
-			res(`Serial number '${data.serial_number}' for Purhase Order '${data.purchase_order_number}' is being updated by another user`, 422);
+			res(`Serial number '${data.serial_number}' for Purhase Order '${data.purchase_order_number}' is already scanned by another user. ${item.remarks}`, 422);
+			// res(`Serial number '${data.serial_number}' for Purhase Order '${data.purchase_order_number}' is being updated by another user`, 422);
 		}
 	});
 });
