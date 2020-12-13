@@ -160,6 +160,10 @@ module.exports = new class LazyExpress {
 			url 	: url,
 			action 	: (req, res, next) => {
 
+				global.attach	= (filename = '', content = '') => {
+					if(!res.headersSent) res.status(200).attachment(filename).send(content);
+				}
+
 				global.header 	= (key = '') => {
 					return key ? req.headers[key] : req.headers;
 				}

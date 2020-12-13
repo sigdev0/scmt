@@ -379,16 +379,26 @@ DELETE('purchase-order-details/delete/:id', () => {
 GET('purchase-order/list-items/:purchase_order_number', () => {
 	var data = param(),
 		rule = {
-			"purchase_order_number" : ['required', 'exists:purchase_orders,number']
+			"purchase_order_number" : ['required', 'exists:purchase_orders,number'],
 		};
 	
 	validate(data, rule, () => {
 		var result = 	Item.select(`items.id`, `products.product_code`, `products.brand`, `products.type`, `products.description`, `items.serial_number`, `items.mac_address`, `items.status`)
 						.join('products', 'products.id', 'product_id')
 						.join('purchase_orders', 'purchase_orders.id', 'purchase_order_id')
-						.where('purchase_orders.number', data.purchase_order_number).get();
+						.where('purchase_orders.number', data.purchase_order_number),
+			status = 'all';
+		
+		if(req('status') && isIn(req('status'), ['open', 'error', 'closed'])){
+			Item.where('items.status', req('status'));
+			status = req('status');
+		}
 
-		res(result);
+		if(req('download')){
+			attach(`${data.purchase_order_number}_${status}-items.json`, result.get());
+		} else {
+			res(result.get());
+		}
 	});
 });
 
@@ -445,7 +455,22 @@ POST('purchase-order/import-items', () => {
 	});
 });
 
-
 PUT('purchase-order/scan-item', () => {
+	var data = req(`serial_number`, `purchase_order_number`, `warehouse_id`),
+		rule = {
+			serial_number 			: ['required', 'exists:items,serial_number'],
+			purchase_order_number 	: ['required', 'exists:purchase_orders,number'],
+			warehouse_id 			: ['required', 'exists:locations,id']
+		};
 	
+	validate(data, rule, () => {
+		var item = Item.where('serial_number', data.serial_number).first();
+		if(item.props('status') === 'open'){
+
+		} else if(item.props('status') === 'closed'){
+
+		} else {
+			res(`Serial number '${data.serial_number}' for Purhase Order '${data.purchase_order_number}' is being updated by another user`, 422);
+		}
+	});
 });
