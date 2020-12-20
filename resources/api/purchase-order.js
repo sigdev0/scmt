@@ -117,66 +117,6 @@ GET('purchase-order-datatable', () => {
     res(instance.datatable(columnToSelect, columnToSearch));
 });
 
-/* PO Insert */
-POST('purchase-order/insert' 	, function(){
-	var data = req( 'reference', 'status', 'currency', 'term_of_payment', 'purchase_mode',
-					'business_unit_id', 'purchase_contract_id', 'created_by'),
-		rule = {
-			// number                  : ['required' , 'unique:purchase_orders'],
-			reference               : ['required'],
-			status      			: ['required', 'in:cancel,draft,submitted,approved,rejected'],
-			purchase_mode  			: ['required', 'in:consigment,regular'],
-			currency                : ['required'],
-			term_of_payment         : ['required'],
-			created_by              : ['required' , 'exists:users,id'],
-			business_unit_id        : ['required' , 'exists:locations,id'],
-			purchase_contract_id    : ['required' , 'exists:purchase_contracts,id'],
-			// supplier_id             : ['required' , 'exists:suppliers,id'],
-		};
-
-    validate(data, rule, () => {
-		data.id 		= PO.max('id') + 1;
-		data.number     = `PO-${moment().format('YYYYMMDD-HHmmss')}-${data.created_by}`;
-		data.created_at = now();
-		data.updated_at = now();
-
-        var purchaseOrder =  PO.insert(data);
-
-        if(!purchaseOrder){
-            res('Internal server error occured', 500);
-        } else {
-            for(var i = 0 ; i < count(req('details')); i++){
-				var poDetails                     		= POD.instance();
-					poDetails.id 						= POD.max('id') + 1;
-					poDetails.quantity 					= req('details')[i]['quantity'];
-					poDetails.quantity_outstanding 		= req('details')[i]['quantity_outstanding'];
-					poDetails.created_at 				= now();
-					poDetails.product_id 				= req('details')[i]['product_id'];
-					// poDetails.business_unit_id 			= req('details')[i]['business_unit_id'];
-					// poDetails.warehouse_id 				= req('details')[i]['warehouse_id'];
-					poDetails.purchase_requisition_id	= req('details')[i]['purchase_requisition_id'];
-					poDetails.purchase_order_id 		= purchaseOrder.id;
-
-				poDetails.insert();
-				// PRD.update({}, {purchase_});
-
-                // validate(details, {
-                //     quantity                     : 'required',
-                //     quantity_outstanding         : 'required',
-                //     product_id                   : 'required' , 'exists:products,id',
-                //     business_unit_id             : 'required' , 'exists:locations,id',
-                //     warehouse_id                 : 'required' , 'exists:locations,id',
-                //     purchase_order_id      : 'required' , 'exists:purchase_orders,id',
-                // }).success( () => {
-                // });
-			}
-			
-			
-            res(purchaseOrder);
-        }
-    });
-});
-
 /* PO Update */
 PUT('purchase-order/update' 	, function(){
 	var data = req('id', 'number', 'reference', 'status', 'purchase_mode', 'currency', 'term_of_payment', 'updated_by', 'business_unit_id', 'purchase_contract_id'),
@@ -432,58 +372,7 @@ GET('purchase-order/list-items-datatable/:purchase_order_number', () => {
 	});
 });
 
-POST('purchase-order/import-items', () => {
-	var data = req(`purchase_order_number`, `product_id`, `csv`, `created_by`),
-		rule = {
-			purchase_order_number 	: [`required`, `exists:purchase_orders,number`],
-			product_id 				: [`required`, `exists:products,id`],
-			created_by 				: [`required`, `exists:users,id`],
-			csv 					: [`required`, `is:file`]
-		};
 
-	validate(data, rule, () => {
-		var total 				= 0,
-			imported 			= 0,
-			success 			= [],
-			failed 				= [],
-			purchase_order_id 	= PO.where({number : data.purchase_order_number}).first().props('id');
-
-
-		foreach(split(data.csv.getContent(), '\n'), (index, each) => {
-			var serial = {
-				id 						: Item.max('id') + 1,
-				purchase_order_id		: purchase_order_id,
-				product_id				: data.product_id,
-				is_scanned 				: 0,
-				serial_number 			: split(each, ';')[0],
-				mac_address 			: split(each, ';')[1].replace('\r', ''),
-				created_at 				: now(true),
-				created_by 				: data.created_by,
-				status 					: 'open'
-			};
-
-			total++;
-			var current = {
-				purchase_order_id 	: serial.purchase_order_id,
-				product_id 			: serial.product_id,
-				serial_number 		: serial.serial_number,
-				mac_address		 	: serial.mac_address
-			};
-
-			if(Item.insert(serial)) {
-				imported++;
-				success.push(current);
-			} else {
-				failed.push(current);
-			}
-		});
-
-		res({
-			success: success,
-			failed : failed
-		});
-	});
-});
 
 PUT('purchase-order/scan-item', () => {
 	var data = req(`serial_number`, `purchase_order_number`, `warehouse_id`, `scanned_by`),

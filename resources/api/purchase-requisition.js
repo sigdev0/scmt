@@ -3,71 +3,6 @@ const   PR  = PurchaseRequisition,
         PO  = PurchaseOrder,
         POD = PurchaseOrderDetail;
 
-/* PR Details */
-GET('purchase-requisition/:id', () => {
-    var data = param(),
-        rule = {
-            id: ['required', 'exists:purchase_requisitions']
-        };
-
-    validate(data, rule, () => {
-        var pr = PR.select('purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'locations.id as business_unit_id', 'locations.location_code as business_unit', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by')
-            .leftJoin('locations', 'locations.id', 'business_unit_id')
-            .leftJoin('users as processors', 'processors.id', 'purchase_requisitions.processed_by')
-            .leftJoin('users as approvers', 'approvers.id', 'purchase_requisitions.approved_by')
-            .leftJoin('users as cancellers', 'cancellers.id', 'purchase_requisitions.cancelled_by')
-            .leftJoin('users as creators', 'creators.id', 'purchase_requisitions.created_by')
-            .leftJoin('users as updaters', 'updaters.id', 'purchase_requisitions.updated_by')
-            .where('purchase_requisitions.id', data.id).first(),
-
-            prDetails = PRD.select('purchase_requisition_details.id', 'quantity', 'target_date', 'purchase_requisition_details.created_at', 'purchase_requisition_details.updated_at', 'product_id', 'product_code', 'products.description', 'location_id', 'location_code', 'locations.description as location_description')
-            .leftJoin('products', 'products.id', 'product_id')
-            .leftJoin('locations', 'locations.id', 'location_id')
-            .where({ purchase_requisition_id: pr.id }).get();
-
-        pr.details = prDetails;
-
-        res(pr);
-    });
-});
-
-/* PR List */
-GET('purchase-requisition', () => {
-    var pr = PR.instance();
-
-    pr.select('purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'locations.location_code as business_unit', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by')
-        .leftJoin('locations', 'locations.id', 'business_unit_id')
-        .leftJoin('users as processors', 'processors.id', 'purchase_requisitions.processed_by')
-        .leftJoin('users as approvers', 'approvers.id', 'purchase_requisitions.approved_by')
-        .leftJoin('users as cancellers', 'cancellers.id', 'purchase_requisitions.cancelled_by')
-        .leftJoin('users as creators', 'creators.id', 'purchase_requisitions.created_by')
-        .leftJoin('users as updaters', 'updaters.id', 'purchase_requisitions.updated_by');
-
-    var limit = req('limit'),
-        offset = req('offset'),
-        keyword = req('keyword');
-
-    if (!empty(limit)) pr.limit(limit);
-    if (!empty(offset)) pr.offset(offset);
-    if (!empty(keyword)) pr.whereLike('purchase_requisitions.number', keyword).orWhereLike('purchase_requisitions.remarks', keyword);
-
-    var purchase_requisitions = [];
-    foreach(pr.get(), (indexPR, eachPR) => {
-        var details = PRD.instance();
-
-        details.select('purchase_requisition_details.id', 'quantity', 'target_date', 'purchase_requisition_details.created_at', 'purchase_requisition_details.updated_at', 'product_id', 'product_code', 'products.description', 'location_id', 'location_code', 'locations.description as location_description')
-            .leftJoin('products', 'products.id', 'product_id')
-            .leftJoin('locations', 'locations.id', 'location_id')
-            .where({ purchase_requisition_id: eachPR.id });
-
-        eachPR.details = details.get() || {};
-
-        purchase_requisitions.push(eachPR);
-    });
-
-    res(purchase_requisitions);
-});
-
 /* PR List Datatable */
 GET('purchase-requisition-datatable', () => {
     var instance = PR.instance(),
@@ -345,50 +280,5 @@ DELETE('purchase-requisition-details/delete/:id', () => {
         } else {
             res('Internal server error occured', 500);
         }
-    });
-});
-
-
-/* 
- * 
- * PR By PC
- * 
- */
-GET('purchase-requisition/by-purchase-contract/:number', () => {
-    var data = param(),
-        rule = {
-            number : ['exists:purchase_contracts,number']
-        };
-    
-    validate(data, rule, () => {
-        var pr = PR.instance();
-
-        pr = PurchaseRequisition
-            .select('purchase_requisitions.id', 'purchase_requisitions.number', 'business_unit.location_code as business_unit_code', 'business_unit.description as business_unit_description')
-
-            .join('purchase_requisition_details', 'purchase_requisition_id'                     , 'purchase_requisitions.id')
-            .join('purchase_contract_details'   , 'purchase_contract_details.product_id'        , 'purchase_requisition_details.product_id')
-            .join('purchase_contracts'          , 'purchase_contracts.id'                       , 'purchase_contract_id')
-            .join('locations as business_unit'  , 'purchase_requisitions.business_unit_id'      , 'business_unit.id')
-
-            .where('purchase_contracts.number', data.number)
-            .groupBy('purchase_requisitions.id', 'purchase_requisitions.number', 'business_unit.location_code', 'business_unit.description')
-            .get();
-
-        foreach(pr, (index, each) => {
-            each.details = PR.select('products.id as product_id', 'products.brand', 'products.product_code', 'products.type', 'products.description', 'purchase_contract_details.price', 'purchase_contract_details.quantity', 'warehouse.location_code as warehouse_code', 'warehouse.description as warehouse_description')
-
-                            .join('purchase_requisition_details'    , 'purchase_requisition_id'                     , 'purchase_requisitions.id')
-                            .join('products'                        , 'products.id'                                 , 'purchase_requisition_details.product_id')
-                            .join('purchase_contract_details'       , 'purchase_contract_details.product_id'        , 'purchase_requisition_details.product_id')
-                            .join('purchase_contracts'              , 'purchase_contracts.id'                       , 'purchase_contract_id')
-                            .join('locations as warehouse'          , 'purchase_requisition_details.location_id'    , 'warehouse.id')
-
-                            .where('purchase_requisitions.id', each.id)
-                            .get();
-        });
-
-
-        res(pr);
     });
 });
