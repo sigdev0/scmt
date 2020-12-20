@@ -1,6 +1,6 @@
 GET('purchase-order/import-items-datatable', () => {
     var instance 		= PurchaseOrderImportHistory.instance(),
-		columnToSelect 	= [ 'purchase_order_id', 'total_item', 'total_success', 'total_failed', 'purchase_order_import_histories.created_at as uploaded_at', 
+		columnToSelect 	= [ 'purchase_order_id', 'total_item', 'total_success', 'total_failed', 'failed_remarks', 'purchase_order_import_histories.created_at as uploaded_at', 
 							'purchase_orders.number as purchase_order_number', 
 							'creators.username as uploaded_by', 
 							'warehouse.id as warehouse_id', 'warehouse.location_code as warehouse_code', 'warehouse.description as warehouse_description'],

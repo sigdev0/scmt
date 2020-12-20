@@ -9,11 +9,11 @@ GET('purchase-order/import-items', () => {
     if (!empty(offset)) instance.offset(offset);
     if (!empty(keyword)) instance.whereLike('purchase_requisitions.number', keyword);
 
-	instance.select('purchase_order_id', 'total_item', 'total_success', 'total_failed', 'purchase_order_import_histories.created_at as uploaded_at', 
+	instance.select('purchase_order_id', 'total_item', 'total_success', 'total_failed', 'failed_remarks', 'purchase_order_import_histories.created_at as uploaded_at', 
 					'purchase_orders.number as purchase_order_number', 
 					'creators.username as uploaded_by', 
 					'warehouse.id as warehouse_id', 'warehouse.location_code as warehouse_code', 'warehouse.description as warehouse_description')
-					
+
 			.join('users as creators'   	, 'creators.id' 		, 'purchase_order_import_histories.created_by')
 			.join('locations as warehouse' 	, 'warehouse.id' 		, 'warehouse_id')
 			.join('purchase_orders' 		, 'purchase_orders.id' 	, 'purchase_order_id')
