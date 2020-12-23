@@ -3,22 +3,6 @@ const   PR  = PurchaseRequisition,
         PO  = PurchaseOrder,
         POD = PurchaseOrderDetail;
 
-/* PR List Datatable */
-GET('purchase-requisition-datatable', () => {
-    var instance = PR.instance(),
-        columnToSelect = ['purchase_requisitions.id', 'number', 'remarks', 'status', 'processed_date', 'approved_date', 'cancelled_date', 'purchase_requisitions.created_at', 'purchase_requisitions.updated_at', 'locations.location_code as business_unit', 'processors.username as processed_by', 'approvers.username as approved_by', 'cancellers.username as cancelled_by', 'creators.username as created_by', 'updaters.username as updated_by'],
-        columnToSearch = ['purchase_requisitions.number', 'purchase_requisitions.remarks'];
-
-    instance.leftJoin('locations', 'locations.id', 'business_unit_id')
-            .leftJoin('users as processors', 'processors.id', 'purchase_requisitions.processed_by')
-            .leftJoin('users as approvers', 'approvers.id', 'purchase_requisitions.approved_by')
-            .leftJoin('users as cancellers', 'cancellers.id', 'purchase_requisitions.cancelled_by')
-            .leftJoin('users as creators', 'creators.id', 'purchase_requisitions.created_by')
-            .leftJoin('users as updaters', 'updaters.id', 'purchase_requisitions.updated_by');
-
-    res(instance.datatable(columnToSelect, columnToSearch));
-});
-
 /* PR Insert */
 POST('purchase-requisition/insert', () => {
     var data = req('remarks', 'status', 'created_by', 'status', 'business_unit_id'),
@@ -98,30 +82,6 @@ PUT('purchase-requisition/update', () => {
             res(purchase_requisition);
         } else {
             res('Internal server error occured', 500);
-        }
-    });
-});
-
-/* PR Delete */
-DELETE('purchase-requisition/delete/:id', () => {
-    var data = param(),
-        rule = {
-            id: ['required', 'exists:purchase_requisitions']
-        };
-
-    validate(data, rule, () => {
-        var poDetail = POD.find(data.id);
-        if (poDetail) {
-            res(`Purchase Requisition with ID of ${param('id')} is being used in PO Details`, 500);
-        } else {
-            var prdDelete = PRD.delete({ purchase_requisition_id: data.id }),
-                prDelete = PR.delete(data);
-
-            if (prdDelete && prDelete) {
-                res(`Purchase Requisition with ID '${data.id}' successfully deleted`);
-            } else {
-                res('Internal server error occured', 500);
-            }
         }
     });
 });

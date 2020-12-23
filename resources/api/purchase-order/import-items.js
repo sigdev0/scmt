@@ -1,4 +1,7 @@
 POST('purchase-order/import-items', () => {
+
+	console.log(req().all());
+
 	var data = req(`purchase_order_number`, `warehouse_id`, `product_id`, `csv`, `created_by`),
 		rule = {
 			purchase_order_number 			: [`required`, `exists:purchase_orders,number`],
@@ -54,6 +57,11 @@ POST('purchase-order/import-items', () => {
 			}
 	
 		});
+
+		// var strFailedRemarks = '';
+		// foreach(failed_remarks, (index, each) => {
+		// 	strFailedRemarks += each + "|";
+		// });
 
 		PurchaseOrderImportHistory.insert({
 			purchase_order_id 	: purchase_order_id,

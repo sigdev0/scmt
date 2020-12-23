@@ -436,8 +436,8 @@ class LazyDB {
 		this.select(columnToSelect);
 
 		var keyword 	= req('search.value') 						|| '',
-			length 		= req('length') 							|| 10,
-			start 		= req('start') 								|| 0,
+			length 		= i(req('length') 							|| 10),
+			start 		= i(req('start') 							|| 0),
 			orderBy 	= columnToSelect[i(req('order.0.column') 	|| '0')],
 			orderDir 	= req('order.0.dir') 						|| 'asc';
 
@@ -471,7 +471,8 @@ class LazyDB {
 			data 			= [];
 
 		foreach(this.get(), (index, row) => {
-			row.index = (i(req('length') || '0') * i(req('start') || '0')) + (i(index) + 1);
+			row.index = start + (index + 1) ;
+			// row.index = (i(length * i(start)) + (i(index) + 1);
 			data.push(row.props());
 		});
 

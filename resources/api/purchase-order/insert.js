@@ -26,16 +26,18 @@ POST('purchase-order/insert' 	, function(){
             res('Internal server error occured', 500);
         } else {
             for(var i = 0 ; i < count(req('details')); i++){
-				var poDetails                     		= PurchaseOrderDetail.instance();
-					poDetails.id 						= PurchaseOrderDetail.max('id') + 1;
-					poDetails.quantity 					= req('details')[i]['quantity'];
-					poDetails.quantity_outstanding 		= req('details')[i]['quantity_outstanding'];
-					poDetails.created_at 				= now();
-					poDetails.product_id 				= req('details')[i]['product_id'];
+				var poDetails                     				= PurchaseOrderDetail.instance();
+					poDetails.id 								= PurchaseOrderDetail.max('id') + 1;
+					poDetails.quantity 							= req('details')[i]['quantity'];
+					poDetails.quantity_outstanding 				= req('details')[i]['quantity_outstanding'];
+					poDetails.created_at 						= now();
+					poDetails.product_id 						= req('details')[i]['product_id'];
 					// poDetails.business_unit_id 			= req('details')[i]['business_unit_id'];
 					// poDetails.warehouse_id 				= req('details')[i]['warehouse_id'];
-					poDetails.purchase_requisition_id	= req('details')[i]['purchase_requisition_id'];
-					poDetails.purchase_order_id 		= purchaseOrder.id;
+					poDetails.purchase_requisition_id			= req('details')[i]['purchase_requisition_id'];
+					poDetails.purchase_contract_detail_id		= req('details')[i]['purchase_contract_detail_id'];
+					poDetails.purchase_requisition_detail_id	= req('details')[i]['purchase_requisition_detail_id'];
+					poDetails.purchase_order_id 				= purchaseOrder.id;
 
 				poDetails.insert();
 
